@@ -2,14 +2,21 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-import time
 import random
+import os
+import time
 
-st.set_page_config(layout="wide")
+# -------------------------------------------------
+# PAGE CONFIG
+# -------------------------------------------------
+st.set_page_config(
+    page_title="Moharada WTP SCADA",
+    layout="wide"
+)
 
-# -------------------------------
+# -------------------------------------------------
 # INDUSTRIAL DARK THEME
-# -------------------------------
+# -------------------------------------------------
 st.markdown("""
     <style>
     body {
@@ -19,7 +26,7 @@ st.markdown("""
     .stMetric {
         background-color: #1c1f26;
         padding: 10px;
-        border-radius: 10px;
+        border-radius: 8px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -27,44 +34,60 @@ st.markdown("""
 st.title("🏭 MOHARADA WTP - SCADA HMI Dashboard")
 st.markdown("### Real-Time Monitoring & Control System")
 
-# -------------------------------
-# SIMULATION VALUES
-# -------------------------------
-flow = 684
-turbidity = random.randint(8, 25)
-chlorine = round(random.uniform(0.3, 1.0), 2)
-ugr_level = random.randint(40, 95)
-pressure = random.randint(3, 8)
+# -------------------------------------------------
+# SESSION STATE FOR PUMP STATUS
+# -------------------------------------------------
+if "pump_running" not in st.session_state:
+    st.session_state.pump_running = True
 
-# Alarm Logic
+# -------------------------------------------------
+# SIMULATED REAL-TIME VALUES
+# -------------------------------------------------
+flow = 684 if st.session_state.pump_running else 0
+pressure = random.randint(4, 8) if st.session_state.pump_running else 0
+turbidity = random.randint(8, 25)
+chlorine = round(random.uniform(0.2, 1.2), 2)
+ugr_level = random.randint(35, 95)
+
+# -------------------------------------------------
+# ALARM CONDITIONS
+# -------------------------------------------------
 turbidity_alarm = turbidity > 20
 chlorine_alarm = chlorine < 0.3 or chlorine > 1.0
 level_alarm = ugr_level < 30
 
-# -------------------------------
-# LAYOUT
-# -------------------------------
+# -------------------------------------------------
+# MAIN LAYOUT
+# -------------------------------------------------
 col1, col2 = st.columns([3, 1])
 
-# -------------------------------
-# PROCESS MIMIC
-# -------------------------------
+# -------------------------------------------------
+# PROCESS IMAGE SECTION (SAFE IMAGE LOADING)
+# -------------------------------------------------
 with col1:
-    st.image("assets/plant_layout.png", use_column_width=True)
-    st.markdown("### 🔄 Plant Running Status")
-    st.success("All Pumps Running") if not turbidity_alarm else st.error("Turbidity Alarm Active!")
+    st.subheader("Process Mimic Diagram")
 
-# -------------------------------
-# LIVE PARAMETERS PANEL
-# -------------------------------
+    if os.path.exists("plant_layout.png"):
+        st.image("plant_layout.png", use_container_width=True)
+    else:
+        st.warning("plant_layout.png not found in project folder.")
+
+    if st.session_state.pump_running:
+        st.success("Plant Status: RUNNING")
+    else:
+        st.error("Plant Status: STOPPED")
+
+# -------------------------------------------------
+# LIVE PARAMETER PANEL
+# -------------------------------------------------
 with col2:
-    st.markdown("## 📊 Live Parameters")
+    st.subheader("Live Parameters")
 
     st.metric("Raw Water Flow (m³/hr)", flow)
     st.metric("Pressure (Bar)", pressure)
 
     if turbidity_alarm:
-        st.metric("Turbidity (NTU)", turbidity, "ALARM", delta_color="inverse")
+        st.metric("Turbidity (NTU)", turbidity, "HIGH")
     else:
         st.metric("Turbidity (NTU)", turbidity)
 
@@ -78,54 +101,63 @@ with col2:
     else:
         st.metric("UGR Level (%)", ugr_level)
 
-# -------------------------------
+# -------------------------------------------------
 # CONTROL PANEL
-# -------------------------------
+# -------------------------------------------------
 st.markdown("---")
-st.markdown("## 🎛 Control Panel")
+st.subheader("🎛 Control Panel")
 
 col3, col4, col5 = st.columns(3)
 
 with col3:
     if st.button("Start Pumps"):
-        st.success("Pumps Started")
+        st.session_state.pump_running = True
 
 with col4:
     if st.button("Stop Pumps"):
-        st.warning("Pumps Stopped")
+        st.session_state.pump_running = False
 
 with col5:
-    dosing_rate = st.slider("Chemical Dosing Rate (mg/L)", 10, 100, 40)
+    dosing_rate = st.slider("Chemical Dosing (mg/L)", 10, 100, 40)
 
-# -------------------------------
+# -------------------------------------------------
 # CHEMICAL OPTIMIZATION LOGIC
-# -------------------------------
-optimized_dose = turbidity * 2
-st.markdown(f"### ⚗ Recommended Coagulant Dose: {optimized_dose} mg/L")
+# -------------------------------------------------
+recommended_dose = turbidity * 2
+st.markdown(f"### ⚗ Recommended Coagulant Dose: **{recommended_dose} mg/L**")
 
-# -------------------------------
-# TREND GRAPH
-# -------------------------------
+# -------------------------------------------------
+# TREND GRAPH SECTION
+# -------------------------------------------------
 st.markdown("---")
-st.markdown("## 📈 Process Trend")
+st.subheader("📈 Turbidity Trend (Last 20 Minutes)")
 
-time_series = pd.date_range(end=pd.Timestamp.now(), periods=20, freq='T')
+time_series = pd.date_range(end=pd.Timestamp.now(), periods=20, freq="min")
 turb_series = np.random.randint(8, 25, size=20)
 
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=time_series, y=turb_series, mode='lines', name='Turbidity'))
+fig.add_trace(go.Scatter(
+    x=time_series,
+    y=turb_series,
+    mode='lines',
+    name='Turbidity'
+))
 fig.update_layout(template="plotly_dark")
 
 st.plotly_chart(fig, use_container_width=True)
 
-# -------------------------------
-# PRODUCTION COUNTER
-# -------------------------------
-production = flow * 24
-st.markdown(f"## 🏗 Total Production (m³/day): {production}")
+# -------------------------------------------------
+# DAILY PRODUCTION CALCULATION
+# -------------------------------------------------
+daily_production = flow * 24
+st.markdown(f"## 🏗 Total Production: **{daily_production} m³/day**")
 
-# -------------------------------
+# -------------------------------------------------
 # FOOTER
-# -------------------------------
+# -------------------------------------------------
 st.markdown("---")
-st.markdown("SCADA System Developed for Moharada WTP | Industrial Simulation Mode")
+st.caption("Industrial SCADA Simulation | Moharada Water Treatment Plant")
+
+
+
+
