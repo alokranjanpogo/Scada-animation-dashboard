@@ -1,127 +1,203 @@
+# ==============================
+# AI WORM DETECTION + RISK SYSTEM
+# ==============================
+
 import streamlit as st
-import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
-import random
-import time
+from PIL import Image
+import tensorflow as tf
 
-st.set_page_config(layout="wide")
+# ==============================
+# LOAD MODEL
+# ==============================
 
-# -------------------------
-# INDUSTRIAL THEME
-# -------------------------
-st.markdown("""
-<style>
-body {background-color: #0E1117; color: white;}
-.big-font {font-size:22px !important;}
-.green {color: #00FF00;}
-.red {color: #FF4B4B;}
-.bluepipe {color: #00BFFF;}
-</style>
-""", unsafe_allow_html=True)
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model("worm_detector.h5")
 
-st.title("🏭 MOHARADA WTP - SCADA HMI")
+model = load_model()
 
-# -------------------------
-# SESSION STATE
-# -------------------------
-if "pump" not in st.session_state:
-    st.session_state.pump = True
+# ==============================
+# IMAGE PROCESSING
+# ==============================
 
-# -------------------------
-# SIMULATION VALUES
-# -------------------------
-flow = 684 if st.session_state.pump else 0
-pressure = random.randint(4,8) if st.session_state.pump else 0
-turbidity = random.randint(8,25)
-chlorine = round(random.uniform(0.2,1.2),2)
-tank_level = random.randint(30,95)
+def preprocess_image(img):
+    img = img.resize((224, 224))
+    img_array = np.array(img) / 255.0
 
-turb_alarm = turbidity > 20
-chlor_alarm = chlorine < 0.3 or chlorine > 1.0
+    if img_array.shape[-1] == 4:
+        img_array = img_array[:, :, :3]
 
-# -------------------------
-# SCADA MIMIC SECTION
-# -------------------------
-st.markdown("## 🖥 Process Mimic")
+    img_array = np.expand_dims(img_array, axis=0)
+    return img_array
 
-col1, col2, col3, col4 = st.columns(4)
 
-# Intake Pump
-with col1:
-    st.markdown("### Intake Pump")
-    if st.session_state.pump:
-        st.markdown("<h3 class='green'>● RUNNING</h3>", unsafe_allow_html=True)
+def predict_worm_presence(img, model):
+    processed = preprocess_image(img)
+    pred = model.predict(processed)[0][0]
+    return float(pred) # 0–1
+
+
+# ==============================
+# ENGINEERING RISK MODEL
+# ==============================
+
+def calculate_engineering_risk(frc, turbidity, temp, velocity, water_age):
+
+    frc_risk = max(0, 0.2 - frc) * 40
+    velocity_risk = max(0, 0.3 - velocity) * 30
+    temp_risk = max(0, temp - 25) * 1.5
+    turbidity_risk = turbidity * 2
+    age_risk = water_age * 3
+
+    total_risk = frc_risk + velocity_risk + temp_risk + turbidity_risk + age_risk
+
+    return min(100, total_risk)
+
+
+# ==============================
+# FUSION MODEL
+# ==============================
+
+def final_risk_score(image_score, engineering_score):
+
+    final_score = (0.6 * image_score * 100) + (0.4 * engineering_score)
+
+    return min(100, final_score)
+
+
+# ==============================
+# SMART ACTION ENGINE
+# ==============================
+
+def generate_actions(image_score, frc, velocity, temp, turbidity, water_age):
+
+    actions = []
+
+    if image_score > 0.7:
+        actions.append("🚨 Worms detected → Immediate flushing required")
+        actions.append("🚨 Shock chlorination recommended")
+
+    if frc < 0.2:
+        actions.append("Increase chlorine dosing")
     else:
-        st.markdown("<h3 class='red'>● STOPPED</h3>", unsafe_allow_html=True)
-    st.metric("Flow (m³/hr)", flow)
+        actions.append("FRC OK → Issue may be biofilm or stagnation")
 
-# Clarifier Tank
+    if velocity < 0.2:
+        actions.append("Low velocity zone → Flush pipeline")
+
+    if temp > 30:
+        actions.append("High temperature → Biological growth risk")
+
+    if turbidity > 3:
+        actions.append("High turbidity → Improve treatment efficiency")
+
+    if water_age > 6:
+        actions.append("High water age → Reduce stagnation")
+
+    if image_score > 0.5 and frc >= 0.2:
+        actions.append("⚠️ Worms present despite chlorine → Biofilm protection likely")
+
+    return actions
+
+
+# ==============================
+# STREAMLIT UI
+# ==============================
+
+st.set_page_config(page_title="AI Worm Detection System", layout="wide")
+
+st.title("🚀 AI-Based Worm Detection & Distribution Risk System")
+
+col1, col2 = st.columns(2)
+
+# ==============================
+# IMAGE INPUT
+# ==============================
+
+with col1:
+    st.subheader("📸 Upload Net / Raw Water Image")
+    uploaded_file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
+
+# ==============================
+# PARAMETER INPUT
+# ==============================
+
 with col2:
-    st.markdown("### Clarifier")
-    st.progress(tank_level)
-    if turb_alarm:
-        st.markdown("<h4 class='red'>⚠ High Turbidity</h4>", unsafe_allow_html=True)
-    st.metric("Turbidity (NTU)", turbidity)
+    st.subheader("⚙️ System Parameters")
 
-# Filter Unit
-with col3:
-    st.markdown("### Filter Bed")
-    st.markdown("<span class='bluepipe'>══════ Flowing Water ══════></span>", unsafe_allow_html=True)
-    st.metric("Pressure (Bar)", pressure)
+    frc = st.slider("Residual Chlorine (mg/L)", 0.0, 1.0, 0.3)
+    turbidity = st.slider("Turbidity (NTU)", 0.0, 10.0, 2.0)
+    temp = st.slider("Temperature (°C)", 20, 40, 30)
+    velocity = st.slider("Flow Velocity (m/s)", 0.0, 1.0, 0.3)
+    water_age = st.slider("Water Age (hours)", 0, 24, 4)
 
-# Chlorination
-with col4:
-    st.markdown("### Chlorination")
-    if chlor_alarm:
-        st.markdown("<h4 class='red'>⚠ Chlorine Out of Range</h4>", unsafe_allow_html=True)
-    st.metric("Chlorine (ppm)", chlorine)
+# ==============================
+# ANALYSIS BUTTON
+# ==============================
 
-# -------------------------
-# CONTROL PANEL
-# -------------------------
+if st.button("🔍 Analyze System"):
+
+    if uploaded_file is None:
+        st.warning("Please upload an image first")
+    else:
+
+        # Image prediction
+        image_score = predict_worm_presence(image, model)
+
+        # Engineering risk
+        eng_score = calculate_engineering_risk(
+            frc, turbidity, temp, velocity, water_age
+        )
+
+        # Final score
+        final_score = final_risk_score(image_score, eng_score)
+
+        # ==============================
+        # STATUS DISPLAY
+        # ==============================
+
+        st.subheader("📊 System Status")
+
+        if final_score > 70:
+            st.error(f"🚨 HIGH RISK ({round(final_score,2)})")
+        elif final_score > 40:
+            st.warning(f"⚠️ MODERATE RISK ({round(final_score,2)})")
+        else:
+            st.success(f"✅ SAFE ({round(final_score,2)})")
+
+        # ==============================
+        # DETAILED OUTPUT
+        # ==============================
+
+        st.subheader("🔎 Detailed Analysis")
+
+        st.write(f"Image Worm Probability: {round(image_score*100,2)} %")
+        st.write(f"Engineering Risk Score: {round(eng_score,2)}")
+        st.write(f"Final Risk Score: {round(final_score,2)}")
+
+        # ==============================
+        # ACTIONS
+        # ==============================
+
+        st.subheader("🛠 Recommended Actions")
+
+        actions = generate_actions(
+            image_score, frc, velocity, temp, turbidity, water_age
+        )
+
+        for act in actions:
+            st.write("•", act)
+
+
+# ==============================
+# FOOTER (FOR PROFESSIONAL TOUCH)
+# ==============================
+
 st.markdown("---")
-st.markdown("## 🎛 Control Panel")
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    if st.button("Start Plant"):
-        st.session_state.pump = True
-
-with c2:
-    if st.button("Stop Plant"):
-        st.session_state.pump = False
-
-with c3:
-    dosing = st.slider("Chemical Dosing (mg/L)", 10, 100, 40)
-
-recommended_dose = turbidity * 2
-st.markdown(f"### ⚗ Recommended Dose: **{recommended_dose} mg/L**")
-
-# -------------------------
-# TREND GRAPH
-# -------------------------
-st.markdown("---")
-st.markdown("## 📈 Turbidity Trend")
-
-time_series = pd.date_range(end=pd.Timestamp.now(), periods=20, freq="min")
-values = np.random.randint(8,25,size=20)
-
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=time_series, y=values, mode='lines'))
-fig.update_layout(template="plotly_dark")
-
-st.plotly_chart(fig, use_container_width=True)
-
-# -------------------------
-# DAILY PRODUCTION
-# -------------------------
-daily = flow * 24
-st.markdown(f"## 🏗 Total Production: **{daily} m³/day**")
-
-st.markdown("---")
-st.caption("Industrial SCADA Simulation - Moharada WTP")
-
-       
+st.caption("AI + Engineering Hybrid Model for Worm Risk Prediction in Water Distribution System")
 
