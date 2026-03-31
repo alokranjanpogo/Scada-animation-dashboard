@@ -1,4 +1,6 @@
 streamlit
+tensorflow
+pillow
 pandas
 numpy
 plotly
