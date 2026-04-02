@@ -215,17 +215,23 @@ left_col, right_col = st.columns([2,1])
 # ===============================
 # 📧 EMAIL FUNCTION
 # ===============================
-def send_email_alert(message):
-    sender = "alokranjan18april@gmail.com"
-    password = "wcxgzpaxumcypwug"   # NOT normal password
-    receiver = "alokranjanjha@gmail.com"
+
+        def send_email_alert(message):
+    sender = "alokranjanjha18april@gmail.com"
+    password = "wcxgzpaxumcypwug"
+    receiver = "alokranjan18april@gmail.com"
 
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(sender, password)
-        server.sendmail(sender, receiver, message)
+
+        # 👇 IMPORTANT FIX
+        server.sendmail(sender, receiver, message.encode('utf-8'))
+
         server.quit()
+        st.success("MAIL SENT SUCCESSFULLY ✅")
+
     except Exception as e:
         st.error(f"Email error: {e}")
 
