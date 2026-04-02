@@ -271,7 +271,7 @@ with left_col:
 
             if current_time - st.session_state.last_alert_time > ALERT_COOLDOWN:
 
-                message = f"""Subject: 🚨 Water Quality Alert
+                message = f"""Subject:Water Quality Alert
 
 Turbidity: {final_turbidity} NTU
 FRC: {frc} mg/L
