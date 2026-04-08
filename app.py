@@ -419,3 +419,93 @@ if uploaded_img:
 
         for r in results:
             st.image(r.plot(), use_container_width=True)
+
+# ===============================
+# 💬 CUSTOMER FEEDBACK AI MODULE
+# ===============================
+
+import streamlit as st
+
+st.markdown("## 💬 Customer Feedback AI Assistant")
+
+# Input from user
+user_input = st.text_input("Enter Customer Complaint (e.g., fishy smell, yellow water, muddy water)")
+
+# Knowledge base (your plant logic)
+def analyze_feedback(text):
+    text = text.lower()
+
+    # 🟡 FISHY / BAD SMELL
+    if "fish" in text or "bad smell" in text or "odor" in text:
+        return {
+            "problem": "Algal growth or organic contamination",
+            "section": "Intake / Aerator / Clarifier",
+            "cause": "High algae in raw water or insufficient aeration",
+            "solution": "Increase pre-chlorination, improve aeration, check algae load at intake"
+        }
+
+    # 🟤 MUDDY WATER
+    elif "muddy" in text or "turbid" in text or "dirty" in text:
+        return {
+            "problem": "High turbidity / improper coagulation",
+            "section": "Clarifier",
+            "cause": "Low alum dose or improper mixing/floc formation",
+            "solution": "Increase alum dose, check flash mixer RPM, inspect floc formation"
+        }
+
+    # 🟢 GREEN LAYER AFTER STORAGE
+    elif "green" in text:
+        return {
+            "problem": "Algal regrowth in distribution",
+            "section": "Sump / Overhead Tank",
+            "cause": "Low residual chlorine",
+            "solution": "Increase chlorine dose, ensure 0.2–0.5 ppm residual chlorine"
+        }
+
+    # 🟡 YELLOW WATER
+    elif "yellow" in text:
+        return {
+            "problem": "Improper disinfection or iron presence",
+            "section": "Chlorination / Distribution",
+            "cause": "Low hypo dosing or iron contamination",
+            "solution": "Increase sodium hypochlorite dosing, check iron removal efficiency"
+        }
+
+    # 🧼 SOAP NOT FORMING FOAM
+    elif "soap" in text or "hard" in text:
+        return {
+            "problem": "Hard water",
+            "section": "Source Water",
+            "cause": "High Ca²⁺ and Mg²⁺ ions",
+            "solution": "Check hardness, consider softening (if required)"
+        }
+
+    # 🚰 LOW PRESSURE
+    elif "pressure" in text:
+        return {
+            "problem": "Distribution issue",
+            "section": "Pumping / Towers",
+            "cause": "Leakage or low pump efficiency",
+            "solution": "Check pump operation, inspect pipeline leakage"
+        }
+
+    # ❓ DEFAULT
+    else:
+        return {
+            "problem": "Unknown issue",
+            "section": "General",
+            "cause": "Not enough data",
+            "solution": "Collect water sample and test parameters (pH, turbidity, chlorine)"
+        }
+
+
+# Output
+if user_input:
+    result = analyze_feedback(user_input)
+
+    st.success("### 🧠 AI Diagnosis")
+
+    st.write(f"**🔍 Problem:** {result['problem']}")
+    st.write(f"**🏭 Section to Check:** {result['section']}")
+    st.write(f"**⚠️ Possible Cause:** {result['cause']}")
+    st.write(f"**✅ Solution:** {result['solution']}")
