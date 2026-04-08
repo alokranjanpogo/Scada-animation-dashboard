@@ -4,3 +4,7 @@ pillow
 pandas
 numpy
 plotly
+ultralytics
+torchvision
+torch
+opencv-python-headless
