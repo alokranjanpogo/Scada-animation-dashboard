@@ -421,8 +421,8 @@ if uploaded_img:
             st.image(r.plot(), use_container_width=True)
 
 # ==========================================
-# 🖥️ WATER QUALITY AI - PRACTICAL VERSION
-# Stage-wise + Field Logic + Standards
+# 🖥️ WATER QUALITY AI - ADVANCED PRACTICAL VERSION
+# Added: Pre-Chlorination + Oily Water Logic
 # ==========================================
 
 import streamlit as st
@@ -454,7 +454,7 @@ if complaint:
         sunlight = st.selectbox("Is storage exposed to sunlight?", ["Yes", "No"])
 
 # ===============================
-# STEP 3: DOSING
+# STEP 3: DOSING + CONDITIONS
 # ===============================
     st.subheader("Step 3: Chemical Dosing")
 
@@ -462,9 +462,11 @@ if complaint:
 
     with col3:
         alum = st.number_input("Alum Dose (ppm)", value=25.0)
+        pre_chlorine = st.number_input("Pre-Chlorination Dose (ppm)", value=0.5)
 
     with col4:
-        hypo = st.number_input("Hypo Dose (ppm)", value=1.0)
+        hypo = st.number_input("Post-Chlorination (Hypo) Dose (ppm)", value=1.0)
+        oily = st.selectbox("Is oily layer observed in raw water?", ["No", "Yes"])
 
 # ===============================
 # FINAL ANALYSIS
@@ -474,6 +476,56 @@ if complaint:
         st.subheader("🧠 Diagnosis & Action")
 
         text = complaint.lower()
+
+        # -------------------------------
+        # 🧪 PRE-CHLORINATION CHECK
+        # -------------------------------
+        st.markdown("### 🧪 Pre-Chlorination Status")
+
+        if pre_chlorine < 0.3:
+            st.warning("⚠️ Low Pre-Chlorination")
+
+            st.write("Impact:")
+            st.write("- Poor algae control")
+            st.write("- Biological load entering clarifier")
+
+            st.write("Action:")
+            st.write("- Increase pre-chlorine (0.5–1 ppm typical)")
+            st.write("- Reduces coagulant demand")
+
+        elif pre_chlorine > 2:
+            st.warning("⚠️ Excess Pre-Chlorination")
+
+            st.write("Impact:")
+            st.write("- Formation of chlorinated organics")
+            st.write("- Taste & odor problems")
+
+            st.write("Action:")
+            st.write("- Optimize dosing (jar test / breakpoint chlorination)")
+
+        else:
+            st.success("Pre-chlorination is in optimal range")
+
+        # -------------------------------
+        # 🛢️ OILY WATER CHECK
+        # -------------------------------
+        if oily == "Yes":
+
+            st.error("🛢️ Issue: Oil/Grease contamination")
+
+            st.write("Cause:")
+            st.write("- Industrial discharge / runoff")
+
+            st.write("Impact:")
+            st.write("- Poor coagulation")
+            st.write("- Filter choking")
+            st.write("- Odor issues")
+
+            st.write("Action:")
+            st.write("- Use oil skimmer / trap before treatment")
+            st.write("- Increase coagulant dose slightly")
+            st.write("- Use PAC/polymer")
+            st.write("- Avoid direct chlorination before oil removal")
 
         # -------------------------------
         # 🟤 MUDDY / SEDIMENT
@@ -488,10 +540,12 @@ if complaint:
                     st.write("- High river turbidity (seasonal load)")
                 if alum < 20:
                     st.write("- Insufficient alum dosing")
+                if oily == "Yes":
+                    st.write("- Oil interfering with coagulation")
 
                 st.write("Action:")
-                st.write("- Increase alum dose (confirm by jar test)")
-                st.write("- Check floc formation in clarifier")
+                st.write("- Increase alum dose (jar test)")
+                st.write("- Check floc formation")
                 st.write("- Backwash filter")
 
         # -------------------------------
@@ -507,8 +561,8 @@ if complaint:
 
             st.write("Action:")
             st.write("- Increase backwash frequency")
-            st.write("- Shock chlorination of filter bed")
-            st.write("- Cover tanks to stop insect breeding")
+            st.write("- Shock chlorination")
+            st.write("- Cover tanks")
 
         # -------------------------------
         # 🌫️ SMELL
@@ -532,7 +586,7 @@ if complaint:
                 st.warning("Likely Cause: Chloramines / algae")
 
                 st.write("Action:")
-                st.write("- Improve clarification (remove organics)")
+                st.write("- Improve clarification")
                 st.write("- Consider PAC dosing")
 
         # -------------------------------
@@ -540,13 +594,12 @@ if complaint:
         # -------------------------------
         elif "green" in text:
 
-            st.error("Issue: Algae growth in storage")
+            st.error("Issue: Algae growth")
 
-            st.write("Cause:")
             if sunlight == "Yes":
-                st.write("- Sunlight exposure")
+                st.write("- Sunlight exposure present")
             if chlorine < 0.2:
-                st.write("- Low residual chlorine")
+                st.write("- Low chlorine")
 
             st.write("Action:")
             st.write("- Cover tank")
@@ -558,10 +611,10 @@ if complaint:
         elif "yellow" in text:
 
             if chlorine > 0.5:
-                st.error("Cause: Excess hypo dosing")
+                st.error("Cause: Excess chlorine")
 
                 st.write("Action:")
-                st.write("- Reduce chlorine dose")
+                st.write("- Reduce dosing")
 
             elif chlorine < 0.2:
                 st.warning("Cause: Biological activity")
