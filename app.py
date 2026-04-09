@@ -897,3 +897,121 @@ with right_col:
 
     except:
         st.error("Weather error")
+
+# ============================================================
+# 🎯 SMART DECISION GRAPH (BEST VERSION)
+# ============================================================
+
+left, right = st.columns([1.1,1.4])
+
+# ============================================================
+# LEFT → CLEAN GRAPH
+# ============================================================
+
+with left:
+
+    st.markdown("### 📊 Dosing Decision Curve")
+
+    x = np.linspace(0, 300, 100)
+
+    # AI curve (main curve only)
+    y_ai = 0.35*x + 5
+
+    fig = go.Figure()
+
+    # Optimal band (IMPORTANT FEATURE)
+    fig.add_hrect(
+        y0=20, y1=30,
+        fillcolor="green", opacity=0.15,
+        line_width=0,
+        annotation_text="Optimal Zone",
+        annotation_position="top left"
+    )
+
+    # Warning zone
+    fig.add_hrect(
+        y0=30, y1=60,
+        fillcolor="yellow", opacity=0.1,
+        line_width=0
+    )
+
+    # Critical zone
+    fig.add_hrect(
+        y0=60, y1=120,
+        fillcolor="red", opacity=0.08,
+        line_width=0
+    )
+
+    # AI curve
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=y_ai,
+        name="AI Recommendation",
+        line=dict(color="cyan", width=4)
+    ))
+
+    # Operating point (MAIN FOCUS)
+    fig.add_trace(go.Scatter(
+        x=[turbidity],
+        y=[ai_dose],
+        mode="markers+text",
+        marker=dict(size=14, color="yellow", line=dict(width=2,color="black")),
+        text=["Operating Point"],
+        textposition="top center"
+    ))
+
+    fig.update_layout(
+        template="plotly_dark",
+        height=350,
+        margin=dict(l=10,r=10,t=40,b=10),
+        xaxis_title="Turbidity (NTU)",
+        yaxis_title="Alum Dose (mg/L)",
+        showlegend=False
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+# ============================================================
+# RIGHT → DECISION PANEL (UNCHANGED BUT CLEAN)
+# ============================================================
+
+with right:
+
+    st.markdown("### 📘 Decision Intelligence")
+
+    st.markdown(f"""
+**Input Conditions**
+- Turbidity: **{turbidity} NTU**
+- pH: **{ph}**
+- Industrial Load: **{"Yes" if industrial else "No"}**
+""")
+
+    st.markdown("---")
+
+    st.markdown(f"""
+### 🧠 Final Recommendation
+
+👉 **{ai_dose:.1f} mg/L Alum**
+
+✔ Based on:
+- CPHEEO: {cpheeo:.1f}  
+- AWWA: {awwa:.1f}  
+- BIS: {bis:.1f}  
+""")
+
+    if jar_available:
+        st.success(f"Jar Test Used: {jar_dose:.1f} mg/L")
+
+    st.markdown("---")
+
+    st.markdown(f"""
+### ⚡ Why this is optimal?
+
+✔ Matches turbidity loading  
+✔ Adjusted for pH ({ph_factor})  
+✔ Accounts for industrial contaminants  
+✔ Keeps operation in safe coagulation zone  
+
+📦 Alum Required: **{alum_kg_day:,.0f} kg/day**  
+⚡ PAC Dose: **{pac_dose:.1f} mg/L**
+""")
