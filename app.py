@@ -369,7 +369,7 @@ if uploaded_img:
         st.write(f"Debris Density: {round(float(density),3)}")
 
         # ==========================
-        # 🧠 AI DECISION ENGINE
+        #  AI DECISION ENGINE
         # ==========================
         st.subheader("⚠️ AI Identified Issues")
 
@@ -663,7 +663,7 @@ from sklearn.linear_model import LinearRegression
 # PAGE
 # ===============================
 st.set_page_config(layout="wide")
-st.markdown("🤖 AI Water Treatment Feedback System")
+st.markdown("## 🤖 AI Water Treatment Feedback System")
 
 left_col, right_col = st.columns([2,1])
 
@@ -718,6 +718,7 @@ with left_col:
         raw_turbidity = st.number_input("Raw Turbidity", 0.0, 500.0, 50.0)
 
     submit = st.button("Submit Feedback", key="submit_btn")
+
 # ===============================
 # MAIN
 # ===============================
@@ -739,8 +740,12 @@ if submit:
     st.success(f"Saved at {now}")
     st.info(f"Total Samples: {len(df)}")
 
-    # AI LOGIC
+    # ===============================
+    # 🤖 AI LOGIC
+    # ===============================
     if len(df) >= 30:
+
+        st.markdown("### 🤖 AI Smart Recommendation")
 
         good = df[
             (df["final_turbidity"] <= 1) &
@@ -748,36 +753,25 @@ if submit:
             (df["frc"] <= 1)
         ]
 
-        if len(good) > 5:
+        if len(good) > 10:
 
-            similar = good[
-                abs(good["raw_turbidity"] - raw_turbidity) <= 20
-            ]
+            good = good.copy()
+            good["diff"] = abs(good["raw_turbidity"] - raw_turbidity)
 
-            if len(similar) > 0:
-                best = similar["dose"].mean()
-                st.success(f"Recommended Dose: {best:.2f} mg/L")
+            similar = good.sort_values(by="diff").head(10)
+            best = similar["dose"].mean()
 
-            else:
-                X = df[["raw_turbidity","dose"]]
-                y = df["final_turbidity"]
-
-                model = LinearRegression()
-                model.fit(X, y)
-
-                for d in np.linspace(1,100,50):
-                    pred = model.predict([[raw_turbidity,d]])[0]
-                    if pred <= 1:
-                        st.success(f"AI Dose: {d:.2f} mg/L")
-                        break
+            st.success(f"Recommended Dose: {best:.2f} mg/L")
 
         else:
-            st.warning("Not enough good data")
+            st.warning("Collect more good quality data")
 
     else:
-        st.warning(f"AI starts after 30 samples (Current: {len(df)})")
+        st.info(f"AI activates after 30 samples (Current: {len(df)})")
 
-    # ALERT
+    # ===============================
+    # 🚨 ALERT
+    # ===============================
     if final_turbidity > 1 or frc < 0.2:
 
         st.session_state.alarm = True
@@ -795,30 +789,44 @@ FRC: {frc}
         st.success("Quality Achieved")
 
 # ===============================
-# ALARM
+# 🔊 CONTINUOUS ALARM (FIXED)
 # ===============================
 if st.session_state.alarm:
 
     st.error("🚨 CONTINUOUS ALARM ACTIVE")
 
-    st.markdown("""
-    <audio autoplay loop>
-    <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
-    </audio>
-    """, unsafe_allow_html=True)
+    # WORKING BEEP SOUND
+    st.audio("https://www.soundjay.com/button/beep-07.wav", loop=True)
 
-    if st.button("🔴 Stop Alarm"):
+    if st.button("🔴 Stop Alarm", key="stop_alarm_btn"):
         st.session_state.alarm = False
         st.success("Alarm Stopped")
 
 # ===============================
-# DATA VIEW
+# 📂 DATA VIEW + DELETE
 # ===============================
-if st.checkbox("Show Stored Data"):
-    st.dataframe(df.sort_values(by="timestamp", ascending=False))
+st.markdown("### 📂 Stored Data")
+
+if len(df) > 0:
+
+    for i in range(len(df)):
+
+        col1, col2 = st.columns([6,1])
+
+        with col1:
+            st.write(df.iloc[i].to_dict())
+
+        with col2:
+            if st.button("❌", key=f"delete_{i}"):
+
+                df = df.drop(i).reset_index(drop=True)
+                df.to_csv(FILE, index=False)
+
+                st.warning("Row deleted!")
+                st.rerun()
 
 # ===============================
-# WEATHER
+# 🌤 WEATHER
 # ===============================
 with right_col:
 
