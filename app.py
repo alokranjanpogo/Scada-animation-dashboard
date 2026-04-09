@@ -649,7 +649,6 @@ if complaint:
             st.success("Chlorine OK")
         else:
             st.error("Chlorine Out of Range")
-
 import streamlit as st
 import smtplib
 import pandas as pd
@@ -668,9 +667,10 @@ st.markdown("## 🤖 AI Water Treatment Feedback System")
 left_col, right_col = st.columns([2,1])
 
 # ===============================
-# EMAIL FUNCTION
+# EMAIL FUNCTION (FINAL FIXED)
 # ===============================
 def send_email_alert(message):
+
     sender = "alokranjan18april@gmail.com"
     password = "wpnrabqfbtkhsqpe"
     receiver = "alok.ranjan6@tatasteel.com"
@@ -679,9 +679,11 @@ def send_email_alert(message):
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(sender, password)
-        server.sendmail(sender, receiver, message.encode('utf-8'))
+        server.sendmail(sender, receiver, message.encode("utf-8"))
         server.quit()
+
         st.success("📧 Email Sent")
+
     except Exception as e:
         st.error(f"Email error: {e}")
 
@@ -707,6 +709,7 @@ else:
 # INPUT
 # ===============================
 with left_col:
+
     c1, c2 = st.columns(2)
 
     with c1:
@@ -741,7 +744,7 @@ if submit:
     st.info(f"Total Samples: {len(df)}")
 
     # ===============================
-    # 🤖 AI LOGIC
+    # AI LOGIC
     # ===============================
     if len(df) >= 30:
 
@@ -764,23 +767,25 @@ if submit:
             st.success(f"Recommended Dose: {best:.2f} mg/L")
 
         else:
-            st.warning("Collect more good quality data")
+            st.warning("Collect more good data")
 
     else:
         st.info(f"AI activates after 30 samples (Current: {len(df)})")
 
     # ===============================
-    # 🚨 ALERT
+    # 🚨 ALERT + EMAIL
     # ===============================
     if final_turbidity > 1 or frc < 0.2:
 
         st.session_state.alarm = True
 
-        msg = f"""Subject: ALERT
+        msg = f"""Subject: 🚨 WATER QUALITY ALERT
 
 Time: {now}
-Turbidity: {final_turbidity}
+Final Turbidity: {final_turbidity}
 FRC: {frc}
+
+Immediate action required.
 """
 
         send_email_alert(msg)
@@ -789,44 +794,49 @@ FRC: {frc}
         st.success("Quality Achieved")
 
 # ===============================
-# 🔊 CONTINUOUS ALARM (FIXED)
+# 🔊 CONTINUOUS ALARM (REAL LOOP FIX)
 # ===============================
 if st.session_state.alarm:
 
     st.error("🚨 CONTINUOUS ALARM ACTIVE")
 
-    # WORKING BEEP SOUND
-    st.audio("https://www.soundjay.com/button/beep-07.wav", loop=True)
+    # TRUE CONTINUOUS LOOP (BEST METHOD)
+    st.markdown(
+        """
+        <audio autoplay loop>
+        <source src="mixkit-alarm-clock-beep-988.wav" type="audio/wav">
+        </audio>
+        """,
+        unsafe_allow_html=True
+    )
 
     if st.button("🔴 Stop Alarm", key="stop_alarm_btn"):
         st.session_state.alarm = False
         st.success("Alarm Stopped")
 
 # ===============================
-# 📂 DATA VIEW + DELETE
+# 📂 DATA TABLE + DELETE
 # ===============================
 st.markdown("### 📂 Stored Data")
 
-if len(df) > 0:
+if st.checkbox("Show Data Table"):
 
-    for i in range(len(df)):
+    if len(df) > 0:
 
-        col1, col2 = st.columns([6,1])
+        st.dataframe(df.sort_values(by="timestamp", ascending=False))
 
-        with col1:
-            st.write(df.iloc[i].to_dict())
+        selected_index = st.selectbox("Select row to delete", df.index)
 
-        with col2:
-            if st.button("❌", key=f"delete_{i}"):
+        if st.button("🗑 Delete Selected Row", key="delete_btn"):
 
-                df = df.drop(i).reset_index(drop=True)
-                df.to_csv(FILE, index=False)
+            df = df.drop(selected_index).reset_index(drop=True)
+            df.to_csv(FILE, index=False)
 
-                st.warning("Row deleted!")
-                st.rerun()
+            st.success("Row deleted!")
+            st.rerun()
 
 # ===============================
-# 🌤 WEATHER
+# WEATHER
 # ===============================
 with right_col:
 
@@ -845,3 +855,4 @@ with right_col:
 
     except:
         st.error("Weather error")
+
