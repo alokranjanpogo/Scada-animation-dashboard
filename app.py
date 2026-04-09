@@ -674,10 +674,10 @@ left_col, right_col = st.columns([2,1])
 
 # ===============================
 
-# 📧 EMAIL FUNCTION
 
 # ===============================
-
+# 📧 EMAIL FUNCTION
+# ===============================
 def send_email_alert(message):
     sender = "alokranjan18april@gmail.com"
     password = "wpnrabqfbtkhsqpe"
@@ -689,21 +689,18 @@ def send_email_alert(message):
         server.login(sender, password)
 
         server.sendmail(sender, receiver, message.encode('utf-8'))
-        server.quit()
 
+        server.quit()
         st.success("MAIL SENT SUCCESSFULLY ✅")
 
     except Exception as e:
         st.error(f"Email error: {e}")
 
-
-
-# ⏱ COOLDOWN SYSTEM
-
 # ===============================
-
+# ⏱ COOLDOWN SYSTEM
+# ===============================
 if "last_alert_time" not in st.session_state:
-st.session_state.last_alert_time = 0
+    st.session_state.last_alert_time = 0
 
 ALERT_COOLDOWN = 300 # 5 min
 
