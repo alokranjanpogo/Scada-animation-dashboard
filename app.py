@@ -794,24 +794,24 @@ Immediate action required.
         st.success("Quality Achieved")
 
 # ===============================
-# 🔊 CONTINUOUS ALARM SECTION (FINAL)
+# 🔊 CONTINUOUS ALARM (FINAL FIX)
 # ===============================
 
-# One-time sound enable (required due to browser policy)
+# One-time enable (browser restriction)
 if "sound_enabled" not in st.session_state:
     st.session_state.sound_enabled = False
 
 if not st.session_state.sound_enabled:
-    if st.button("🔊 Enable Alarm Sound (One-time)", key="enable_sound"):
+    if st.button("🔊 Enable Alarm Sound", key="enable_sound"):
         st.session_state.sound_enabled = True
         st.success("Sound Enabled ✅")
 
-# Alarm trigger block
+# Alarm
 if st.session_state.alarm:
 
     st.error("🚨 CONTINUOUS ALARM ACTIVE")
 
-    # 🔴 Flashing visual alarm (industrial style)
+    # Flashing UI
     st.markdown("""
     <style>
     @keyframes blink {
@@ -831,16 +831,15 @@ if st.session_state.alarm:
     <div class="alarm-box">🚨 CRITICAL WATER QUALITY ALERT 🚨</div>
     """, unsafe_allow_html=True)
 
-    # 🔊 Sound (after one-time enable)
+    # 🔊 LOOP SOUND (BEST METHOD)
     if st.session_state.sound_enabled:
-        try:
-            with open("mixkit-sport-start-bleeps-918.wav", "rb") as f:
-                st.audio(f.read(), format="audio/wav")
-        except:
-            st.warning("⚠️ Sound file not found in folder")
-
+        st.markdown("""
+        <audio autoplay loop>
+        <source src="mixkit-sport-start-bleeps-918.wav" type="audio/wav">
+        </audio>
+        """, unsafe_allow_html=True)
     else:
-        st.warning("🔊 Click 'Enable Alarm Sound' once to activate audio")
+        st.warning("🔊 Enable sound once")
 
     # Stop button
     if st.button("🔴 Stop Alarm", key="stop_alarm_btn"):
