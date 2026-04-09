@@ -651,201 +651,217 @@ if complaint:
             st.error("Chlorine Out of Range")
 # ===============================
 
-# 🤖 AI FEEDBACK + WEATHER (FINAL VERSION)
+# 🤖 AI FEEDBACK + 3YR STORAGE + SMART DOSING + ALARM
 
 # ===============================
 
 import streamlit as st
 import smtplib
 import time
-
-# 🔹 AI + DATA IMPORTS
-
 import pandas as pd
 import os
-from sklearn.linear_model import LinearRegression
 import numpy as np
 import requests
 from datetime import datetime
+from sklearn.linear_model import LinearRegression
 
-st.markdown("## 🤖 AI Feedback & Learning System")
+st.set_page_config(layout="wide")
+st.title("🤖 AI Water Treatment Feedback System")
 
 left_col, right_col = st.columns([2,1])
 
 # ===============================
 
-
-# ===============================
 # 📧 EMAIL FUNCTION
+
 # ===============================
+
 def send_email_alert(message):
-    sender = "alokranjan18april@gmail.com"
-    password = "wpnrabqfbtkhsqpe"
-    receiver = "alok.ranjan6@tatasteel.com"
-
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(sender, password)
-
-        server.sendmail(sender, receiver, message.encode('utf-8'))
-
-        server.quit()
-        st.success("MAIL SENT SUCCESSFULLY ✅")
-
-    except Exception as e:
-        st.error(f"Email error: {e}")
-
-# ===============================
-# ⏱ COOLDOWN SYSTEM
-# ===============================
-if "last_alert_time" not in st.session_state:
-    st.session_state.last_alert_time = 0
-
-ALERT_COOLDOWN = 300 # 5 min
+try:
+server = smtplib.SMTP("smtp.gmail.com", 587)
+server.starttls()
+server.login("[alokranjan18april@gmail.com](mailto:alokranjan18april@gmail.com)", "wpnrabqfbtkhsqpe")
+server.sendmail("[alokranjan18april@gmail.com](mailto:alokranjan18april@gmail.com)",
+"[alok.ranjan6@tatasteel.com](mailto:alok.ranjan6@tatasteel.com)",
+message.encode('utf-8'))
+server.quit()
+st.success("📧 Email Sent")
+except Exception as e:
+st.error(f"Email error: {e}")
 
 # ===============================
 
-# 🧠 DATA STORAGE (LONG TERM)
+# 🔊 ALARM STATE
 
 # ===============================
 
-DATA_FILE = "feedback_data.csv"
+if "alarm" not in st.session_state:
+st.session_state.alarm = False
 
-if os.path.exists(DATA_FILE):
-df = pd.read_csv(DATA_FILE)
+# ===============================
+
+# 📁 DATA STORAGE (3+ YEARS)
+
+# ===============================
+
+FILE = "feedback_data.csv"
+
+if os.path.exists(FILE):
+df = pd.read_csv(FILE)
 else:
 df = pd.DataFrame(columns=[
-"timestamp",
-"raw_turbidity",
-"dose",
-"final_turbidity",
-"frc"
+"timestamp","raw_turbidity","dose","final_turbidity","frc"
 ])
 
 # ===============================
 
-# LEFT SIDE → MAIN SYSTEM
+# INPUT SECTION
 
 # ===============================
 
 with left_col:
 
 ```
-col1, col2 = st.columns(2)
+c1, c2 = st.columns(2)
 
-with col1:
-    dose = st.slider("Dose Applied (mg/L)", 0.0, 100.0, 10.0)
-    final_turbidity = st.number_input("Final Turbidity (NTU)", 0.0, 50.0, 1.0)
-    frc = st.number_input("Final Residual Chlorine (mg/L)", 0.0, 5.0, 0.5)
+with c1:
+    dose = st.slider("Dose (mg/L)", 0.0, 100.0, 10.0)
+    final_turbidity = st.number_input("Final Turbidity", 0.0, 50.0, 1.0)
+    frc = st.number_input("FRC", 0.0, 5.0, 0.5)
 
-with col2:
-    raw_turbidity = st.number_input("Raw Water Turbidity (NTU)", 0.0, 500.0, 50.0)
+with c2:
+    raw_turbidity = st.number_input("Raw Turbidity", 0.0, 500.0, 50.0)
 
 submit = st.button("Submit Feedback")
-
-# ===============================
-# 📊 SAVE DATA + AI
-# ===============================
-if submit:
-
-    current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    performance_index = 100 - (final_turbidity * 20)
-    st.write(f"Performance Index: {performance_index:.2f}")
-
-    # SAVE DATA
-    new_data = pd.DataFrame([{
-        "timestamp": current_time_str,
-        "raw_turbidity": raw_turbidity,
-        "dose": dose,
-        "final_turbidity": final_turbidity,
-        "frc": frc
-    }])
-
-    df = pd.concat([df, new_data], ignore_index=True)
-    df.to_csv(DATA_FILE, index=False)
-
-    st.success(f"✅ Data Saved at {current_time_str}")
-    st.info(f"🧠 Total Samples: {len(df)}")
-
-    # ===============================
-    # 🤖 AI MODEL (START AFTER 30)
-    # ===============================
-    if len(df) >= 30:
-
-        X = df[["raw_turbidity", "dose"]]
-        y_turbidity = df["final_turbidity"]
-        y_frc = df["frc"]
-
-        model_turb = LinearRegression()
-        model_frc = LinearRegression()
-
-        model_turb.fit(X, y_turbidity)
-        model_frc.fit(X, y_frc)
-
-        st.success("🤖 AI Active (30+ Samples)")
-
-        test_doses = np.linspace(1, 100, 50)
-        best_dose = None
-
-        for d in test_doses:
-            pred_turb = model_turb.predict([[raw_turbidity, d]])[0]
-            pred_frc = model_frc.predict([[raw_turbidity, d]])[0]
-
-            if pred_turb <= 1 and 0.2 <= pred_frc <= 1:
-                best_dose = d
-                break
-
-        if best_dose:
-            st.success(f"🎯 Recommended Dose: {best_dose:.2f} mg/L")
-        else:
-            st.warning("⚠️ No optimal dose found yet")
-
-    else:
-        st.warning(f"📊 AI starts after 30 samples (Current: {len(df)})")
-
-    # ===============================
-    # 🚨 EMAIL ALERT
-    # ===============================
-    if final_turbidity > 1 or frc < 0.2:
-
-        current_time = time.time()
-
-        if current_time - st.session_state.last_alert_time > ALERT_COOLDOWN:
-
-            message = f"""Subject:Water Quality Alert
 ```
 
-Time: {current_time_str}
-Turbidity: {final_turbidity} NTU
-FRC: {frc} mg/L
+# ===============================
 
-Immediate attention required!
+# MAIN LOGIC
+
+# ===============================
+
+if submit:
+
+```
+now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# SAVE DATA
+new = pd.DataFrame([{
+    "timestamp": now,
+    "raw_turbidity": raw_turbidity,
+    "dose": dose,
+    "final_turbidity": final_turbidity,
+    "frc": frc
+}])
+
+df = pd.concat([df, new], ignore_index=True)
+df.to_csv(FILE, index=False)
+
+st.success(f"✅ Saved at {now}")
+st.info(f"📊 Total Samples: {len(df)}")
+
+# ===============================
+# 🤖 SMART AI SUGGESTION
+# ===============================
+if len(df) >= 30:
+
+    # STEP 1: FILTER GOOD RESULTS
+    good_data = df[
+        (df["final_turbidity"] <= 1) &
+        (df["frc"] >= 0.2) &
+        (df["frc"] <= 1)
+    ]
+
+    if len(good_data) > 5:
+
+        # STEP 2: FIND CLOSE MATCHES
+        similar = good_data[
+            abs(good_data["raw_turbidity"] - raw_turbidity) <= 20
+        ]
+
+        if len(similar) > 0:
+            best_dose = similar["dose"].mean()
+
+            st.success(f"🎯 AI Recommended Dose: {best_dose:.2f} mg/L (from history)")
+
+        else:
+            # FALLBACK MODEL
+            X = df[["raw_turbidity","dose"]]
+            y = df["final_turbidity"]
+
+            model = LinearRegression()
+            model.fit(X, y)
+
+            doses = np.linspace(1,100,50)
+            best_dose = None
+
+            for d in doses:
+                pred = model.predict([[raw_turbidity,d]])[0]
+                if pred <= 1:
+                    best_dose = d
+                    break
+
+            if best_dose:
+                st.success(f"🎯 AI Suggested Dose: {best_dose:.2f} mg/L (model)")
+            else:
+                st.warning("⚠️ Still learning...")
+
+    else:
+        st.warning("⚠️ Not enough good quality data yet")
+
+else:
+    st.warning(f"📊 AI activates after 30 samples (Current: {len(df)})")
+
+# ===============================
+# 🚨 QUALITY CHECK
+# ===============================
+if final_turbidity > 1 or frc < 0.2:
+
+    st.session_state.alarm = True
+    st.error("🚨 Desired Quality NOT Achieved!")
+
+    st.audio("https://www.soundjay.com/button/beep-07.wav", autoplay=True)
+
+    msg = f"""Subject: ALERT
+```
+
+Time: {now}
+Turbidity: {final_turbidity}
+FRC: {frc}
 """
 
 ```
-            send_email_alert(message)
-            st.session_state.last_alert_time = current_time
+    send_email_alert(msg)
 
-            st.error("🚨 Email Alert Sent!")
-
-        else:
-            st.warning("⏳ Alert already sent recently")
-
-    else:
-        st.success("✅ System Normal")
-
-# ===============================
-# 📂 VIEW STORED DATA
-# ===============================
-if st.checkbox("📂 Show Stored Data (with Time)"):
-    st.dataframe(df.sort_values(by="timestamp", ascending=False), use_container_width=True)
+else:
+    st.success("✅ Quality Achieved")
 ```
 
 # ===============================
 
-# 🌤 RIGHT SIDE → WEATHER (UNCHANGED)
+# 🔴 STOP ALARM
+
+# ===============================
+
+if st.session_state.alarm:
+if st.button("🔴 Stop Alarm"):
+st.session_state.alarm = False
+st.success("Alarm Stopped")
+
+# ===============================
+
+# 📂 VIEW 3 YEAR DATA
+
+# ===============================
+
+if st.checkbox("📂 View Stored Data (3 Years)"):
+st.dataframe(df.sort_values(by="timestamp", ascending=False),
+use_container_width=True)
+
+# ===============================
+
+# 🌤 WEATHER (UNCHANGED)
 
 # ===============================
 
@@ -861,14 +877,11 @@ try:
     url = f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric"
     data = requests.get(url).json()
 
-    temp = data["main"]["temp"]
-    humidity = data["main"]["humidity"]
-    weather = data["weather"][0]["description"]
-
-    st.metric("🌡 Temperature", f"{temp} °C")
-    st.metric("💧 Humidity", f"{humidity} %")
-    st.write(f"☁ Condition: {weather}")
+    st.metric("🌡 Temp", f"{data['main']['temp']} °C")
+    st.metric("💧 Humidity", f"{data['main']['humidity']} %")
+    st.write(f"☁ {data['weather'][0]['description']}")
 
 except:
-    st.error("Weather data not loading ⚠️")
+    st.error("Weather error")
 ```
+
