@@ -834,7 +834,7 @@ if st.session_state.alarm:
     # 🔊 Sound (after one-time enable)
     if st.session_state.sound_enabled:
         try:
-            with open("mixkit-sport-start-bleep-918.wav", "rb") as f:
+            with open("mixkit-sport-start-bleeps-918.wav", "rb") as f:
                 st.audio(f.read(), format="audio/wav")
         except:
             st.warning("⚠️ Sound file not found in folder")
