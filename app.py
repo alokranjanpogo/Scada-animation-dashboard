@@ -663,7 +663,7 @@ from sklearn.linear_model import LinearRegression
 # PAGE
 # ===============================
 st.set_page_config(layout="wide")
-st.title("🤖 AI Water Treatment Feedback System")
+st.markdown("🤖 AI Water Treatment Feedback System")
 
 left_col, right_col = st.columns([2,1])
 
@@ -717,8 +717,7 @@ with left_col:
     with c2:
         raw_turbidity = st.number_input("Raw Turbidity", 0.0, 500.0, 50.0)
 
-    submit = st.button("Submit Feedback")
-
+    submit = st.button("Submit Feedback", key="submit_btn")
 # ===============================
 # MAIN
 # ===============================
