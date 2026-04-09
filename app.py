@@ -743,21 +743,21 @@ submit = st.button("Submit Feedback")
 
 if submit:
 
-now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-new = pd.DataFrame([{
+    new = pd.DataFrame([{
     "timestamp": now,
     "raw_turbidity": raw_turbidity,
     "dose": dose,
     "final_turbidity": final_turbidity,
     "frc": frc
-}])
+    }])
 
-df = pd.concat([df, new], ignore_index=True)
-df.to_csv(FILE, index=False)
+    df = pd.concat([df, new], ignore_index=True)
+    df.to_csv(FILE, index=False)
 
-st.success(f"Saved at {now}")
-st.info(f"Total Samples: {len(df)}")
+    st.success(f"Saved at {now}")
+    st.info(f"Total Samples: {len(df)}")
 
 # ===============================
 # 🤖 AI LOGIC (AFTER 30)
