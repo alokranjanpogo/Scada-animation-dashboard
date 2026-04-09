@@ -680,7 +680,6 @@ def send_email_alert(message):
     password = "wpnrabqfbtkhsqpe"
     receiver = "alok.ranjan6@tatasteel.com"
 
-```
 try:
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
@@ -690,7 +689,6 @@ try:
     st.success("📧 Email Sent")
 except Exception as e:
     st.error(f"Email error: {e}")
-```
 
 # ===============================
 
@@ -724,7 +722,6 @@ df = pd.DataFrame(columns=[
 
 with left_col:
 
-```
 c1, c2 = st.columns(2)
 
 with c1:
@@ -736,7 +733,6 @@ with c2:
     raw_turbidity = st.number_input("Raw Turbidity", 0.0, 500.0, 50.0)
 
 submit = st.button("Submit Feedback")
-```
 
 # ===============================
 
@@ -746,7 +742,6 @@ submit = st.button("Submit Feedback")
 
 if submit:
 
-```
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 new = pd.DataFrame([{
@@ -810,7 +805,6 @@ if final_turbidity > 1 or frc < 0.2:
     st.session_state.alarm = True
 
     msg = f"""Subject: ALERT
-```
 
 Time: {now}
 Turbidity: {final_turbidity}
@@ -818,10 +812,8 @@ FRC: {frc}
 """
 send_email_alert(msg)
 
-```
 else:
     st.success("Quality Achieved")
-```
 
 # ===============================
 
@@ -847,7 +839,6 @@ st.markdown(
 if st.button("🔴 Stop Alarm"):
     st.session_state.alarm = False
     st.success("Alarm Stopped")
-```
 
 # ===============================
 
@@ -866,7 +857,6 @@ st.dataframe(df.sort_values(by="timestamp", ascending=False))
 
 with right_col:
 
-```
 st.markdown("### Weather")
 
 API_KEY = "f899db331049be78181d1afddbc92935"
@@ -882,5 +872,4 @@ try:
 
 except:
     st.error("Weather error")
-```
 
