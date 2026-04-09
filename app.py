@@ -793,27 +793,59 @@ Immediate action required.
     else:
         st.success("Quality Achieved")
 
+# ===============================
+# 🔊 CONTINUOUS ALARM SECTION (FINAL)
+# ===============================
+
+# One-time sound enable (required due to browser policy)
+if "sound_enabled" not in st.session_state:
+    st.session_state.sound_enabled = False
+
+if not st.session_state.sound_enabled:
+    if st.button("🔊 Enable Alarm Sound (One-time)", key="enable_sound"):
+        st.session_state.sound_enabled = True
+        st.success("Sound Enabled ✅")
+
+# Alarm trigger block
 if st.session_state.alarm:
 
     st.error("🚨 CONTINUOUS ALARM ACTIVE")
 
+    # 🔴 Flashing visual alarm (industrial style)
     st.markdown("""
-    <script>
-    var audio = new Audio("mixkit-sport-start-bleep-918");
-    audio.loop = true;
-
-    document.addEventListener('click', function() {
-        audio.play();
-    }, { once: true });
-    </script>
+    <style>
+    @keyframes blink {
+        0% { background-color: red; }
+        50% { background-color: transparent; }
+        100% { background-color: red; }
+    }
+    .alarm-box {
+        animation: blink 1s infinite;
+        padding: 20px;
+        text-align: center;
+        font-size: 26px;
+        color: white;
+        font-weight: bold;
+    }
+    </style>
+    <div class="alarm-box">🚨 CRITICAL WATER QUALITY ALERT 🚨</div>
     """, unsafe_allow_html=True)
 
-    st.warning("⚠️ Click anywhere once to activate alarm sound")
+    # 🔊 Sound (after one-time enable)
+    if st.session_state.sound_enabled:
+        try:
+            with open("mixkit-sport-start-bleep-918.wav", "rb") as f:
+                st.audio(f.read(), format="audio/wav")
+        except:
+            st.warning("⚠️ Sound file not found in folder")
 
+    else:
+        st.warning("🔊 Click 'Enable Alarm Sound' once to activate audio")
+
+    # Stop button
     if st.button("🔴 Stop Alarm", key="stop_alarm_btn"):
         st.session_state.alarm = False
         st.success("Alarm Stopped")
-
 # ===============================
 # 📂 DATA TABLE + DELETE
 # ===============================
