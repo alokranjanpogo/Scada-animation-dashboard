@@ -793,22 +793,22 @@ Immediate action required.
     else:
         st.success("Quality Achieved")
 
-# ===============================
-# 🔊 CONTINUOUS ALARM (REAL LOOP FIX)
-# ===============================
 if st.session_state.alarm:
 
     st.error("🚨 CONTINUOUS ALARM ACTIVE")
 
-    # TRUE CONTINUOUS LOOP (BEST METHOD)
-    st.markdown(
-        """
-        <audio autoplay loop>
-        <source src="mixkit-alarm-clock-beep-988.wav" type="audio/wav">
-        </audio>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <script>
+    var audio = new Audio("mixkit-sport-start-bleep-918");
+    audio.loop = true;
+
+    document.addEventListener('click', function() {
+        audio.play();
+    }, { once: true });
+    </script>
+    """, unsafe_allow_html=True)
+
+    st.warning("⚠️ Click anywhere once to activate alarm sound")
 
     if st.button("🔴 Stop Alarm", key="stop_alarm_btn"):
         st.session_state.alarm = False
