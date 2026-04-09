@@ -794,10 +794,12 @@ Immediate action required.
         st.success("Quality Achieved")
 
 # ===============================
-# 🔊 CONTINUOUS ALARM (FINAL FIX)
+# 🔊 FINAL WORKING ALARM (EMBEDDED SOUND)
 # ===============================
 
-# One-time enable (browser restriction)
+import base64
+
+# One-time enable
 if "sound_enabled" not in st.session_state:
     st.session_state.sound_enabled = False
 
@@ -811,7 +813,7 @@ if st.session_state.alarm:
 
     st.error("🚨 CONTINUOUS ALARM ACTIVE")
 
-    # Flashing UI
+    # 🔴 Flashing UI
     st.markdown("""
     <style>
     @keyframes blink {
@@ -831,17 +833,26 @@ if st.session_state.alarm:
     <div class="alarm-box">🚨 CRITICAL WATER QUALITY ALERT 🚨</div>
     """, unsafe_allow_html=True)
 
-    # 🔊 LOOP SOUND (BEST METHOD)
+    # 🔊 SOUND (EMBEDDED + LOOP)
     if st.session_state.sound_enabled:
-        st.markdown("""
-        <audio autoplay loop>
-        <source src="mixkit-sport-start-bleeps-918.wav" type="audio/wav">
-        </audio>
-        """, unsafe_allow_html=True)
+        try:
+            with open("mixkit-sport-start-bleeps-918.wav", "rb") as f:
+                data = f.read()
+                b64 = base64.b64encode(data).decode()
+
+            st.markdown(f"""
+            <audio autoplay loop>
+                <source src="data:audio/wav;base64,{b64}" type="audio/wav">
+            </audio>
+            """, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.warning(f"⚠️ Sound issue: {e}")
+
     else:
         st.warning("🔊 Enable sound once")
 
-    # Stop button
+    # Stop
     if st.button("🔴 Stop Alarm", key="stop_alarm_btn"):
         st.session_state.alarm = False
         st.success("Alarm Stopped")
