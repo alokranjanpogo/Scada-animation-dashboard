@@ -697,7 +697,7 @@ except Exception as e:
 # ===============================
 
 if "alarm" not in st.session_state:
-st.session_state.alarm = False
+   st.session_state.alarm = False
 
 # ===============================
 
@@ -708,9 +708,9 @@ st.session_state.alarm = False
 FILE = "feedback_data.csv"
 
 if os.path.exists(FILE):
-df = pd.read_csv(FILE)
+      df = pd.read_csv(FILE)
 else:
-df = pd.DataFrame(columns=[
+     df = pd.DataFrame(columns=[
 "timestamp","raw_turbidity","dose","final_turbidity","frc"
 ])
 
@@ -720,7 +720,8 @@ df = pd.DataFrame(columns=[
 
 # ===============================
 
-with left_col:
+with 
+    left_col:
 
 c1, c2 = st.columns(2)
 
