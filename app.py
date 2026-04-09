@@ -650,12 +650,6 @@ if complaint:
         else:
             st.error("Chlorine Out of Range")
 
-# ===============================
-
-# 🤖 AI SYSTEM + CONTINUOUS ALARM + EMAIL (FINAL)
-
-# ===============================
-
 import streamlit as st
 import smtplib
 import pandas as pd
@@ -665,92 +659,79 @@ import requests
 from datetime import datetime
 from sklearn.linear_model import LinearRegression
 
+# ===============================
+# PAGE
+# ===============================
 st.set_page_config(layout="wide")
 st.title("🤖 AI Water Treatment Feedback System")
 
 left_col, right_col = st.columns([2,1])
 
 # ===============================
-
-# 📧 EMAIL FUNCTION (CLEAN)
-
+# EMAIL FUNCTION
 # ===============================
-
 def send_email_alert(message):
     sender = "alokranjan18april@gmail.com"
     password = "wpnrabqfbtkhsqpe"
     receiver = "alok.ranjan6@tatasteel.com"
 
-try:
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login(sender, password)
-    server.sendmail(sender, receiver, message.encode('utf-8'))
-    server.quit()
-    st.success("📧 Email Sent")
-except Exception as e:
-    st.error(f"Email error: {e}")
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender, password)
+        server.sendmail(sender, receiver, message.encode('utf-8'))
+        server.quit()
+        st.success("📧 Email Sent")
+    except Exception as e:
+        st.error(f"Email error: {e}")
 
 # ===============================
-
-# 🔊 ALARM STATE
-
+# ALARM STATE
 # ===============================
-
 if "alarm" not in st.session_state:
-   st.session_state.alarm = False
+    st.session_state.alarm = False
 
 # ===============================
-
-# 📁 DATA STORAGE
-
+# DATA
 # ===============================
-
 FILE = "feedback_data.csv"
 
 if os.path.exists(FILE):
-      df = pd.read_csv(FILE)
+    df = pd.read_csv(FILE)
 else:
-     df = pd.DataFrame(columns=[
-"timestamp","raw_turbidity","dose","final_turbidity","frc"
-])
+    df = pd.DataFrame(columns=[
+        "timestamp","raw_turbidity","dose","final_turbidity","frc"
+    ])
 
 # ===============================
-
-# INPUT UI
-
+# INPUT
 # ===============================
-
 with left_col:
-
     c1, c2 = st.columns(2)
 
-with c1:
-    dose = st.slider("Dose (mg/L)", 0.0, 100.0, 10.0)
-    final_turbidity = st.number_input("Final Turbidity", 0.0, 50.0, 1.0)
-    frc = st.number_input("FRC", 0.0, 5.0, 0.5)
+    with c1:
+        dose = st.slider("Dose (mg/L)", 0.0, 100.0, 10.0)
+        final_turbidity = st.number_input("Final Turbidity", 0.0, 50.0, 1.0)
+        frc = st.number_input("FRC", 0.0, 5.0, 0.5)
 
-with c2:
-    raw_turbidity = st.number_input("Raw Turbidity", 0.0, 500.0, 50.0)
+    with c2:
+        raw_turbidity = st.number_input("Raw Turbidity", 0.0, 500.0, 50.0)
 
-submit = st.button("Submit Feedback")
-
-# ===============================
-
-# MAIN LOGIC
+    submit = st.button("Submit Feedback")
 
 # ===============================
-
+# MAIN
+# ===============================
 if submit:
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     new = pd.DataFrame([{
-    "timestamp": now,
-    "raw_turbidity": raw_turbidity,
-    "dose": dose,
-    "final_turbidity": final_turbidity,
-    "frc": frc
+        "timestamp": now,
+        "raw_turbidity": raw_turbidity,
+        "dose": dose,
+        "final_turbidity": final_turbidity,
+        "frc": frc
     }])
 
     df = pd.concat([df, new], ignore_index=True)
@@ -759,118 +740,101 @@ if submit:
     st.success(f"Saved at {now}")
     st.info(f"Total Samples: {len(df)}")
 
-# ===============================
-# 🤖 AI LOGIC (AFTER 30)
-# ===============================
-if len(df) >= 30:
+    # AI LOGIC
+    if len(df) >= 30:
 
-    good = df[
-        (df["final_turbidity"] <= 1) &
-        (df["frc"] >= 0.2) &
-        (df["frc"] <= 1)
-    ]
-
-    if len(good) > 5:
-
-        similar = good[
-            abs(good["raw_turbidity"] - raw_turbidity) <= 20
+        good = df[
+            (df["final_turbidity"] <= 1) &
+            (df["frc"] >= 0.2) &
+            (df["frc"] <= 1)
         ]
 
-        if len(similar) > 0:
-            best = similar["dose"].mean()
-            st.success(f"Recommended Dose: {best:.2f} mg/L")
+        if len(good) > 5:
+
+            similar = good[
+                abs(good["raw_turbidity"] - raw_turbidity) <= 20
+            ]
+
+            if len(similar) > 0:
+                best = similar["dose"].mean()
+                st.success(f"Recommended Dose: {best:.2f} mg/L")
+
+            else:
+                X = df[["raw_turbidity","dose"]]
+                y = df["final_turbidity"]
+
+                model = LinearRegression()
+                model.fit(X, y)
+
+                for d in np.linspace(1,100,50):
+                    pred = model.predict([[raw_turbidity,d]])[0]
+                    if pred <= 1:
+                        st.success(f"AI Dose: {d:.2f} mg/L")
+                        break
 
         else:
-            X = df[["raw_turbidity","dose"]]
-            y = df["final_turbidity"]
-
-            model = LinearRegression()
-            model.fit(X, y)
-
-            for d in np.linspace(1,100,50):
-                pred = model.predict([[raw_turbidity,d]])[0]
-                if pred <= 1:
-                    st.success(f"AI Dose: {d:.2f} mg/L")
-                    break
+            st.warning("Not enough good data")
 
     else:
-        st.warning("Not enough good data")
+        st.warning(f"AI starts after 30 samples (Current: {len(df)})")
 
-else:
-    st.warning(f"AI starts after 30 samples (Current: {len(df)})")
+    # ALERT
+    if final_turbidity > 1 or frc < 0.2:
 
-# ===============================
-# 🚨 ALERT CONDITION
-# ===============================
-if final_turbidity > 1 or frc < 0.2:
-    st.session_state.alarm = True
+        st.session_state.alarm = True
 
-    msg = f"""Subject: ALERT
+        msg = f"""Subject: ALERT
 
 Time: {now}
 Turbidity: {final_turbidity}
 FRC: {frc}
 """
-send_email_alert(msg)
 
-else:
-    st.success("Quality Achieved")
+        send_email_alert(msg)
 
-# ===============================
-
-# 🔊 CONTINUOUS ALARM (REAL FIX)
+    else:
+        st.success("Quality Achieved")
 
 # ===============================
-
+# ALARM
+# ===============================
 if st.session_state.alarm:
 
-```
-st.error("🚨 CONTINUOUS ALARM ACTIVE")
+    st.error("🚨 CONTINUOUS ALARM ACTIVE")
 
-# LOOPING AUDIO (THIS IS THE KEY FIX)
-st.markdown(
-    """
+    st.markdown("""
     <audio autoplay loop>
     <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
     </audio>
-    """,
-    unsafe_allow_html=True
-)
+    """, unsafe_allow_html=True)
 
-if st.button("🔴 Stop Alarm"):
-    st.session_state.alarm = False
-    st.success("Alarm Stopped")
+    if st.button("🔴 Stop Alarm"):
+        st.session_state.alarm = False
+        st.success("Alarm Stopped")
 
 # ===============================
-
-# 📂 VIEW DATA
+# DATA VIEW
+# ===============================
+if st.checkbox("Show Stored Data"):
+    st.dataframe(df.sort_values(by="timestamp", ascending=False))
 
 # ===============================
-
-if st.checkbox("Show Stored Data (3 Years)"):
-st.dataframe(df.sort_values(by="timestamp", ascending=False))
-
+# WEATHER
 # ===============================
-
-# 🌤 WEATHER
-
-# ===============================
-
 with right_col:
 
-st.markdown("### Weather")
+    st.markdown("### 🌤 Weather")
 
-API_KEY = "f899db331049be78181d1afddbc92935"
-CITY = "Jamshedpur"
+    API_KEY = "f899db331049be78181d1afddbc92935"
+    CITY = "Jamshedpur"
 
-try:
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric"
-    data = requests.get(url).json()
+    try:
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric"
+        data = requests.get(url).json()
 
-    st.metric("Temp", f"{data['main']['temp']} °C")
-    st.metric("Humidity", f"{data['main']['humidity']} %")
-    st.write(data['weather'][0]['description'])
+        st.metric("Temp", f"{data['main']['temp']} °C")
+        st.metric("Humidity", f"{data['main']['humidity']} %")
+        st.write(data['weather'][0]['description'])
 
-except:
-    st.error("Weather error")
-
+    except:
+        st.error("Weather error")
