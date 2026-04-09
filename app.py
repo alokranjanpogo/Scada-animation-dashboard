@@ -679,9 +679,9 @@ left_col, right_col = st.columns([2,1])
 # ===============================
 
 def send_email_alert(message):
-sender = "[alokranjan18april@gmail.com]
+sender = "[alokranjan18april@gmail.com]"
 password = "wpnrabqfbtkhsqpe"
-receiver = "[alok.ranjan6@tatasteel.com]
+receiver = "[alok.ranjan6@tatasteel.com]"
 ```
 try:
     server = smtplib.SMTP("smtp.gmail.com", 587)
