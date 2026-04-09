@@ -720,8 +720,7 @@ else:
 
 # ===============================
 
-with 
-    left_col:
+with left_col:
 
 c1, c2 = st.columns(2)
 
