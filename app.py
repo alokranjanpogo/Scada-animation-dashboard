@@ -679,25 +679,24 @@ left_col, right_col = st.columns([2,1])
 # ===============================
 
 def send_email_alert(message):
-sender = "alokranjan18april@gmail.com"
-password = "wpnrabqfbtkhsqpe"
-receiver = "alok.ranjan6@tatasteel.com"
-```
-try:
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login(sender, password)
+    sender = "alokranjan18april@gmail.com"
+    password = "wpnrabqfbtkhsqpe"
+    receiver = "alok.ranjan6@tatasteel.com"
 
-    server.sendmail(sender, receiver, message.encode('utf-8'))
-    server.quit()
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender, password)
 
-    st.success("MAIL SENT SUCCESSFULLY ✅")
+        server.sendmail(sender, receiver, message.encode('utf-8'))
+        server.quit()
 
-except Exception as e:
-    st.error(f"Email error: {e}")
-```
+        st.success("MAIL SENT SUCCESSFULLY ✅")
 
-# ===============================
+    except Exception as e:
+        st.error(f"Email error: {e}")
+
+
 
 # ⏱ COOLDOWN SYSTEM
 
