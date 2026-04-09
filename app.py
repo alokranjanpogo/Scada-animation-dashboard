@@ -649,6 +649,7 @@ if complaint:
             st.success("Chlorine OK")
         else:
             st.error("Chlorine Out of Range")
+
 # ===============================
 
 # 🤖 AI SYSTEM + CONTINUOUS ALARM + EMAIL (FINAL)
@@ -722,7 +723,7 @@ else:
 
 with left_col:
 
-c1, c2 = st.columns(2)
+    c1, c2 = st.columns(2)
 
 with c1:
     dose = st.slider("Dose (mg/L)", 0.0, 100.0, 10.0)
