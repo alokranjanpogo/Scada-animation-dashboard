@@ -855,4 +855,3 @@ with right_col:
 
     except:
         st.error("Weather error")
-
