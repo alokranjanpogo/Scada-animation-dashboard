@@ -898,15 +898,133 @@ with right_col:
 
     except:
         st.error("Weather error")
+# ============================================================
+# IMPORTS (VERY IMPORTANT)
+# ============================================================
+
+import streamlit as st
+import numpy as np
+import plotly.graph_objects as go
 
 # ============================================================
-# 🎯 SMART DECISION GRAPH (BEST VERSION)
+# TITLE
+# ============================================================
+
+st.subheader("🧠 Intelligent Alum Dosing Decision System")
+
+# ============================================================
+# INPUTS
+# ============================================================
+
+flow_mld = 18
+flow_m3_day = flow_mld * 1000
+
+turbidity = float(intake_turb) # from your existing slider
+
+ph = st.slider("pH", 4.5, 9.0, 7.0, 0.1)
+
+industrial = st.toggle("⚠️ Industrial Discharge Present")
+
+# ============================================================
+# 🧪 JAR TEST INPUT (MANUAL)
+# ============================================================
+
+st.markdown("### 🧪 Jar Test Input")
+
+jar_available = st.toggle("Use Jar Test")
+
+if jar_available:
+    jar_dose = st.number_input("Enter Jar Test Dose (mg/L)", value=25.0)
+else:
+    jar_dose = None
+
+# ============================================================
+# STANDARD MODELS (REALISTIC ENGINEERING)
+# ============================================================
+
+def cpheeo_model(t):
+    return 0.35*t + 5
+
+def awwa_model(t):
+    return 0.40*t + 8
+
+def bis_model(t):
+    return 0.30*t + 6
+
+cpheeo = cpheeo_model(turbidity)
+awwa = awwa_model(turbidity)
+bis = bis_model(turbidity)
+
+# ============================================================
+# CORRECTIONS
+# ============================================================
+
+# pH correction
+if ph < 5.5:
+    ph_factor = 1.2
+elif ph > 7.5:
+    ph_factor = 1.1
+else:
+    ph_factor = 1.0
+
+# industrial load
+industrial_factor = 1.25 if industrial else 1.0
+
+# turbidity boost
+if turbidity > 300:
+    turb_factor = 1.35
+elif turbidity > 150:
+    turb_factor = 1.2
+else:
+    turb_factor = 1.0
+
+# ============================================================
+# AI DOSING LOGIC (SAFE + COMPLETE)
+# ============================================================
+
+if jar_available:
+    ai_dose = (
+        0.6 * jar_dose +
+        0.2 * cpheeo +
+        0.1 * awwa +
+        0.1 * bis
+    )
+else:
+    ai_dose = (
+        0.4 * cpheeo +
+        0.35 * awwa +
+        0.25 * bis
+    )
+
+ai_dose = ai_dose * ph_factor * industrial_factor * turb_factor
+ai_dose = float(np.clip(ai_dose, 5, 150)) # ALWAYS defined
+
+# ============================================================
+# CHEMICAL REQUIREMENT
+# ============================================================
+
+alum_kg_day = (ai_dose * flow_m3_day) / 1000
+pac_dose = 0.6 * ai_dose
+
+# ============================================================
+# STATUS BAND
+# ============================================================
+
+if ai_dose > 80:
+    st.error("🔴 High Chemical Demand")
+elif ai_dose > 40:
+    st.warning("🟡 Moderate Condition")
+else:
+    st.success("🟢 Normal Operation")
+
+# ============================================================
+# LAYOUT
 # ============================================================
 
 left, right = st.columns([1.1,1.4])
 
 # ============================================================
-# LEFT → CLEAN GRAPH
+# 📊 LEFT → CLEAN GRAPH
 # ============================================================
 
 with left:
@@ -914,19 +1032,15 @@ with left:
     st.markdown("### 📊 Dosing Decision Curve")
 
     x = np.linspace(0, 300, 100)
-
-    # AI curve (main curve only)
-    y_ai = 0.35*x + 5
+    y_ai = 0.3*x + 8 + 0.0005*(x**2)
 
     fig = go.Figure()
 
-    # Optimal band (IMPORTANT FEATURE)
+    # Optimal zone
     fig.add_hrect(
         y0=20, y1=30,
         fillcolor="green", opacity=0.15,
-        line_width=0,
-        annotation_text="Optimal Zone",
-        annotation_position="top left"
+        line_width=0
     )
 
     # Warning zone
@@ -947,17 +1061,17 @@ with left:
     fig.add_trace(go.Scatter(
         x=x,
         y=y_ai,
-        name="AI Recommendation",
-        line=dict(color="cyan", width=4)
+        line=dict(color="cyan", width=4),
+        name="AI Curve"
     ))
 
-    # Operating point (MAIN FOCUS)
+    # Operating point (SAFE)
     fig.add_trace(go.Scatter(
         x=[turbidity],
         y=[ai_dose],
         mode="markers+text",
-        marker=dict(size=14, color="yellow", line=dict(width=2,color="black")),
-        text=["Operating Point"],
+        marker=dict(size=14, color="yellow"),
+        text=["Operating"],
         textposition="top center"
     ))
 
@@ -972,13 +1086,16 @@ with left:
 
     st.plotly_chart(fig, use_container_width=True)
 
+    st.metric("Dose", f"{ai_dose:.1f} mg/L")
+    st.metric("Alum Required", f"{alum_kg_day:,.0f} kg/day")
+
 # ============================================================
-# RIGHT → DECISION PANEL (UNCHANGED BUT CLEAN)
+# 📘 RIGHT → DECISION PANEL
 # ============================================================
 
 with right:
 
-    st.markdown("### 📘 Decision Intelligence")
+    st.markdown("### 📘 Recommendation Logic")
 
     st.markdown(f"""
 **Input Conditions**
@@ -990,29 +1107,47 @@ with right:
     st.markdown("---")
 
     st.markdown(f"""
-### 🧠 Final Recommendation
-
-👉 **{ai_dose:.1f} mg/L Alum**
-
-✔ Based on:
-- CPHEEO: {cpheeo:.1f}  
-- AWWA: {awwa:.1f}  
-- BIS: {bis:.1f}  
+**Standard Estimates**
+- CPHEEO: {cpheeo:.1f} mg/L  
+- AWWA: {awwa:.1f} mg/L  
+- BIS: {bis:.1f} mg/L  
 """)
 
     if jar_available:
         st.success(f"Jar Test Used: {jar_dose:.1f} mg/L")
+    else:
+        st.warning("Jar Test not used")
 
     st.markdown("---")
 
     st.markdown(f"""
-### ⚡ Why this is optimal?
+### 🧠 Final Decision
 
-✔ Matches turbidity loading  
-✔ Adjusted for pH ({ph_factor})  
-✔ Accounts for industrial contaminants  
-✔ Keeps operation in safe coagulation zone  
+👉 **{ai_dose:.1f} mg/L Alum**
+
+✔ Adjusted for:
+- pH factor: {ph_factor}
+- Industrial load: {industrial_factor}
+- Turbidity factor: {turb_factor}
+
+✔ Ensures:
+- Effective coagulation  
+- Controlled sludge  
+- Stable filtration  
 
 📦 Alum Required: **{alum_kg_day:,.0f} kg/day**  
 ⚡ PAC Dose: **{pac_dose:.1f} mg/L**
 """)
+
+# ============================================================
+# ALERT SYSTEM
+# ============================================================
+
+if ai_dose > 80:
+    st.error("🔴 Consider PAC or Pre-treatment")
+
+elif jar_available and abs(ai_dose - jar_dose) > 5:
+    st.warning("🟡 Deviation from Jar Test")
+
+else:
+    st.success("🟢 Optimal dosing")
