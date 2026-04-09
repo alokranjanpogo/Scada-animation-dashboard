@@ -899,34 +899,41 @@ with right_col:
     except:
         st.error("Weather error")
 # ============================================================
-# IMPORTS (VERY IMPORTANT)
+# IMPORTS (KEEP AT TOP OF FILE)
 # ============================================================
 
-import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+import streamlit as st
 
 # ============================================================
-# TITLE
+# 🧠 INTELLIGENT ALUM DOSING SYSTEM
 # ============================================================
 
 st.subheader("🧠 Intelligent Alum Dosing Decision System")
 
 # ============================================================
-# INPUTS
+# SAFE TURBIDITY INPUT (USES YOUR EXISTING SLIDER)
+# ============================================================
+
+try:
+    turbidity = float(intake_turb)
+except:
+    turbidity = st.slider("Raw Water Turbidity (NTU)", 0.0, 500.0, 50.0)
+
+# ============================================================
+# OTHER INPUTS
 # ============================================================
 
 flow_mld = 18
 flow_m3_day = flow_mld * 1000
-
-turbidity = float(intake_turb) # from your existing slider
 
 ph = st.slider("pH", 4.5, 9.0, 7.0, 0.1)
 
 industrial = st.toggle("⚠️ Industrial Discharge Present")
 
 # ============================================================
-# 🧪 JAR TEST INPUT (MANUAL)
+# 🧪 JAR TEST INPUT
 # ============================================================
 
 st.markdown("### 🧪 Jar Test Input")
@@ -939,7 +946,7 @@ else:
     jar_dose = None
 
 # ============================================================
-# STANDARD MODELS (REALISTIC ENGINEERING)
+# STANDARD MODELS (ENGINEERING BASED)
 # ============================================================
 
 def cpheeo_model(t):
@@ -956,7 +963,7 @@ awwa = awwa_model(turbidity)
 bis = bis_model(turbidity)
 
 # ============================================================
-# CORRECTIONS
+# CORRECTION FACTORS
 # ============================================================
 
 # pH correction
@@ -979,7 +986,7 @@ else:
     turb_factor = 1.0
 
 # ============================================================
-# AI DOSING LOGIC (SAFE + COMPLETE)
+# AI DOSING CALCULATION (ALWAYS DEFINED)
 # ============================================================
 
 if jar_available:
@@ -997,7 +1004,7 @@ else:
     )
 
 ai_dose = ai_dose * ph_factor * industrial_factor * turb_factor
-ai_dose = float(np.clip(ai_dose, 5, 150)) # ALWAYS defined
+ai_dose = float(np.clip(ai_dose, 5, 150))
 
 # ============================================================
 # CHEMICAL REQUIREMENT
@@ -1021,10 +1028,10 @@ else:
 # LAYOUT
 # ============================================================
 
-left, right = st.columns([1.1,1.4])
+left, right = st.columns([1.1, 1.4])
 
 # ============================================================
-# 📊 LEFT → CLEAN GRAPH
+# 📊 LEFT → GRAPH
 # ============================================================
 
 with left:
@@ -1037,25 +1044,13 @@ with left:
     fig = go.Figure()
 
     # Optimal zone
-    fig.add_hrect(
-        y0=20, y1=30,
-        fillcolor="green", opacity=0.15,
-        line_width=0
-    )
+    fig.add_hrect(y0=20, y1=30, fillcolor="green", opacity=0.15, line_width=0)
 
     # Warning zone
-    fig.add_hrect(
-        y0=30, y1=60,
-        fillcolor="yellow", opacity=0.1,
-        line_width=0
-    )
+    fig.add_hrect(y0=30, y1=60, fillcolor="yellow", opacity=0.1, line_width=0)
 
     # Critical zone
-    fig.add_hrect(
-        y0=60, y1=120,
-        fillcolor="red", opacity=0.08,
-        line_width=0
-    )
+    fig.add_hrect(y0=60, y1=120, fillcolor="red", opacity=0.08, line_width=0)
 
     # AI curve
     fig.add_trace(go.Scatter(
@@ -1078,7 +1073,7 @@ with left:
     fig.update_layout(
         template="plotly_dark",
         height=350,
-        margin=dict(l=10,r=10,t=40,b=10),
+        margin=dict(l=10, r=10, t=40, b=10),
         xaxis_title="Turbidity (NTU)",
         yaxis_title="Alum Dose (mg/L)",
         showlegend=False
@@ -1090,7 +1085,7 @@ with left:
     st.metric("Alum Required", f"{alum_kg_day:,.0f} kg/day")
 
 # ============================================================
-# 📘 RIGHT → DECISION PANEL
+# 📘 RIGHT → EXPLANATION
 # ============================================================
 
 with right:
@@ -1127,7 +1122,7 @@ with right:
 
 ✔ Adjusted for:
 - pH factor: {ph_factor}
-- Industrial load: {industrial_factor}
+- Industrial factor: {industrial_factor}
 - Turbidity factor: {turb_factor}
 
 ✔ Ensures:
