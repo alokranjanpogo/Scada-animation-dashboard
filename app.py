@@ -672,22 +672,26 @@ left_col, right_col = st.columns([2,1])
 
 # ===============================
 
-# 📧 EMAIL FUNCTION
+# 📧 EMAIL FUNCTION (FIXED)
 
 # ===============================
 
 def send_email_alert(message):
+sender = "[alokranjan18april@gmail.com](mailto:alokranjan18april@gmail.com)"
+password = "wpnrabqfbtkhsqpe"
+receiver = "[alok.ranjan6@tatasteel.com](mailto:alok.ranjan6@tatasteel.com)"
+
+```
 try:
-server = smtplib.SMTP("smtp.gmail.com", 587)
-server.starttls()
-server.login("[alokranjan18april@gmail.com](mailto:alokranjan18april@gmail.com)", "wpnrabqfbtkhsqpe")
-server.sendmail("[alokranjan18april@gmail.com](mailto:alokranjan18april@gmail.com)",
-"[alok.ranjan6@tatasteel.com](mailto:alok.ranjan6@tatasteel.com)",
-message.encode('utf-8'))
-server.quit()
-st.success("📧 Email Sent")
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(sender, password)
+    server.sendmail(sender, receiver, message.encode('utf-8'))
+    server.quit()
+    st.success("📧 Email Sent")
 except Exception as e:
-st.error(f"Email error: {e}")
+    st.error(f"Email error: {e}")
+```
 
 # ===============================
 
@@ -700,7 +704,7 @@ st.session_state.alarm = False
 
 # ===============================
 
-# 📁 DATA STORAGE (3+ YEARS)
+# 📁 DATA STORAGE
 
 # ===============================
 
@@ -746,7 +750,6 @@ if submit:
 ```
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# SAVE DATA
 new = pd.DataFrame([{
     "timestamp": now,
     "raw_turbidity": raw_turbidity,
@@ -762,11 +765,10 @@ st.success(f"✅ Saved at {now}")
 st.info(f"📊 Total Samples: {len(df)}")
 
 # ===============================
-# 🤖 SMART AI SUGGESTION
+# 🤖 AI LOGIC
 # ===============================
 if len(df) >= 30:
 
-    # STEP 1: FILTER GOOD RESULTS
     good_data = df[
         (df["final_turbidity"] <= 1) &
         (df["frc"] >= 0.2) &
@@ -775,18 +777,15 @@ if len(df) >= 30:
 
     if len(good_data) > 5:
 
-        # STEP 2: FIND CLOSE MATCHES
         similar = good_data[
             abs(good_data["raw_turbidity"] - raw_turbidity) <= 20
         ]
 
         if len(similar) > 0:
             best_dose = similar["dose"].mean()
-
-            st.success(f"🎯 AI Recommended Dose: {best_dose:.2f} mg/L (from history)")
+            st.success(f"🎯 Recommended Dose: {best_dose:.2f} mg/L")
 
         else:
-            # FALLBACK MODEL
             X = df[["raw_turbidity","dose"]]
             y = df["final_turbidity"]
 
@@ -803,23 +802,23 @@ if len(df) >= 30:
                     break
 
             if best_dose:
-                st.success(f"🎯 AI Suggested Dose: {best_dose:.2f} mg/L (model)")
+                st.success(f"🎯 AI Dose: {best_dose:.2f} mg/L")
             else:
                 st.warning("⚠️ Still learning...")
 
     else:
-        st.warning("⚠️ Not enough good quality data yet")
+        st.warning("⚠️ Not enough good data")
 
 else:
-    st.warning(f"📊 AI activates after 30 samples (Current: {len(df)})")
+    st.warning(f"📊 AI starts after 30 samples (Current: {len(df)})")
 
 # ===============================
-# 🚨 QUALITY CHECK
+# 🚨 ALERT + BEEP
 # ===============================
 if final_turbidity > 1 or frc < 0.2:
 
     st.session_state.alarm = True
-    st.error("🚨 Desired Quality NOT Achieved!")
+    st.error("🚨 Quality NOT Achieved!")
 
     st.audio("https://www.soundjay.com/button/beep-07.wav", autoplay=True)
 
@@ -830,10 +829,9 @@ Time: {now}
 Turbidity: {final_turbidity}
 FRC: {frc}
 """
+send_email_alert(msg)
 
 ```
-    send_email_alert(msg)
-
 else:
     st.success("✅ Quality Achieved")
 ```
@@ -851,17 +849,16 @@ st.success("Alarm Stopped")
 
 # ===============================
 
-# 📂 VIEW 3 YEAR DATA
+# 📂 VIEW DATA
 
 # ===============================
 
-if st.checkbox("📂 View Stored Data (3 Years)"):
-st.dataframe(df.sort_values(by="timestamp", ascending=False),
-use_container_width=True)
+if st.checkbox("📂 View Stored Data"):
+st.dataframe(df.sort_values(by="timestamp", ascending=False))
 
 # ===============================
 
-# 🌤 WEATHER (UNCHANGED)
+# 🌤 WEATHER
 
 # ===============================
 
