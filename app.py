@@ -1146,3 +1146,162 @@ elif jar_available and abs(ai_dose - jar_dose) > 5:
 
 else:
     st.success("🟢 Optimal dosing")
+
+# ==============================
+# 🌊 AI INTAKE DEBRIS MODULE
+# ==============================
+
+from ultralytics import YOLO
+from PIL import Image
+import numpy as np
+import streamlit as st
+import os
+
+st.markdown("---")
+st.header("🌊 AI Intake Monitoring System")
+
+# ==============================
+# SESSION STATE INIT
+# ==============================
+if "img" not in st.session_state:
+    st.session_state.img = None
+
+if "run_ai" not in st.session_state:
+    st.session_state.run_ai = False
+
+
+# ==============================
+# LOAD MODEL
+# ==============================
+def load_model():
+    if not os.path.exists("best.pt"):
+        st.error("❌ best.pt not found in this folder")
+        st.stop()
+    return YOLO("best.pt")
+
+
+# ==============================
+# IMAGE UPLOAD
+# ==============================
+uploaded_img = st.file_uploader(
+    "Upload Intake Image",
+    type=["jpg", "png", "jpeg"],
+    key="intake_upload_unique" # unique key (important)
+)
+
+if uploaded_img:
+    st.session_state.img = Image.open(uploaded_img).convert("RGB")
+
+
+# ==============================
+# DISPLAY IMAGE
+# ==============================
+if st.session_state.img is not None:
+    st.image(st.session_state.img, caption="Intake Image", use_container_width=True)
+
+
+# ==============================
+# BUTTON (FIXED - NO RESET ISSUE)
+# ==============================
+if st.button("🔍 Run AI Analysis", key="run_ai_button_unique"):
+    st.session_state.run_ai = True
+
+
+# ==============================
+# AI EXECUTION BLOCK
+# ==============================
+if st.session_state.run_ai:
+
+    st.info("🚀 Running AI Analysis...")
+
+    img = st.session_state.img
+
+    if img is None:
+        st.error("❌ Please upload an image first")
+        st.session_state.run_ai = False
+        st.stop()
+
+    # Load model here (safe)
+    model = load_model()
+
+    # Convert image
+    img_np = np.array(img)
+
+    # Run inference
+    results = model(img_np)
+
+    detected = []
+    total_area = 0.0
+
+    for r in results:
+        if r.boxes is not None:
+            for box in r.boxes:
+
+                label = r.names[int(box.cls[0])]
+                detected.append(label)
+
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                area = (x2 - x1) * (y2 - y1)
+                total_area += float(area)
+
+    # ==============================
+    # 📊 ANALYSIS
+    # ==============================
+    st.subheader("📊 AI Detection Summary")
+
+    st.write("Detected Objects:", detected if detected else "None")
+
+    debris_count = len(detected)
+    img_area = img.size[0] * img.size[1]
+    density = total_area / img_area if img_area > 0 else 0
+
+    st.write(f"Debris Density: {round(density, 3)}")
+
+    # ==============================
+    # ⚠️ DECISION ENGINE
+    # ==============================
+    st.subheader("⚠️ AI Identified Issues")
+
+    issues = []
+    actions = []
+
+    if any(x in detected for x in ["plastic", "bottle", "bag"]):
+        issues.append("Plastic accumulation → Intake blockage risk")
+        actions.append("Install / clean trash racks immediately")
+
+    if any(x in detected for x in ["leaf", "plant"]):
+        issues.append("High organic load → Increased coagulant demand")
+        actions.append("Increase alum/PAC dosing temporarily")
+
+    if density > 0.15:
+        issues.append("High debris density → Clarifier overload risk")
+        actions.append("Reduce intake flow rate")
+
+    if density > 0.25 or debris_count > 8:
+        issues.append("Extreme debris condition → Filter choking risk")
+        actions.append("Prepare for frequent backwashing")
+
+    if debris_count == 0:
+        issues.append("No visible debris → System stable")
+        actions.append("Maintain normal operation")
+
+    for i in issues:
+        st.write("•", i)
+
+    st.subheader("🛠 Recommended Actions")
+
+    for a in actions:
+        st.write("•", a)
+
+    # ==============================
+    # 📦 OUTPUT IMAGE
+    # ==============================
+    st.subheader("📦 Detection Output")
+
+    for r in results:
+        st.image(r.plot(), use_container_width=True)
+
+    # ==============================
+    # RESET STATE (IMPORTANT)
+    # ==============================
+    st.session_state.run_ai = False
