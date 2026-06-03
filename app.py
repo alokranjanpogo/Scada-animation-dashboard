@@ -2708,23 +2708,6 @@ zone_heat["Rating Score"] = (
     .clip(1,5)
 )
 
-# ==========================================================
-# EXECUTIVE WATER QUALITY INDEX
-# ==========================================================
-
-zone_heat["WQI"] = (
-    zone_heat["Turbidity Score"]
-    +
-    zone_heat["FRC Score"]
-    +
-    zone_heat["pH Score"]
-    +
-    zone_heat["Rating Score"]
-)
-
-zone_heat["WQI"] = (
-    zone_heat["WQI"] / 20 * 100
-).round(0)
 
 # ==========================================================
 # HEATMAP MATRIX
@@ -2763,7 +2746,7 @@ fig_heat = go.Figure(
         colorscale="RdYlGn",
 
         zmin=1,
-        zmax=100,
+        zmax=5,
 
         text=heat_matrix.values,
 
