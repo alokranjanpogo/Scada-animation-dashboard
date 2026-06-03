@@ -1271,9 +1271,65 @@ st.markdown("### 📊 Area-wise Water Quality Comparison")
 # ==========================================================
 # AREA SUMMARY
 # ==========================================================
+# ==========================================================
+# MONTH & YEAR FILTER
+# ==========================================================
 
+area_df = wq.copy()
+
+area_df["UpdatedOn"] = pd.to_datetime(
+    area_df["UpdatedOn"],
+    errors="coerce"
+)
+
+area_df["Year"] = area_df["UpdatedOn"].dt.year
+area_df["Month"] = area_df["UpdatedOn"].dt.month_name()
+
+all_months = [
+    "January","February","March","April",
+    "May","June","July","August",
+    "September","October","November","December"
+]
+
+all_years = list(range(2026, 2036))
+
+f1, f2 = st.columns(2)
+
+with f1:
+
+    selected_year_area = st.selectbox(
+        "📅 Select Year",
+        all_years,
+        key="area_year"
+    )
+
+with f2:
+
+    selected_month_area = st.selectbox(
+        "📆 Select Month",
+        all_months,
+        key="area_month"
+    )
+
+area_df = area_df[
+    (area_df["Year"] == selected_year_area)
+    &
+    (area_df["Month"] == selected_month_area)
+]
+
+if area_df.empty:
+
+    st.warning(
+        f"⚠️ Data Not Available for {selected_month_area} {selected_year_area}"
+    )
+
+    st.stop()
+
+st.success(
+    f"Showing Data for {selected_month_area} {selected_year_area}"
+)
 zone_summary = (
-    wq.groupby("Cust_Name_")
+    area_df.groupby("Cust_Name_")
     .agg({
         "Turbidity":"mean",
         "FRC_PPM":"mean",
