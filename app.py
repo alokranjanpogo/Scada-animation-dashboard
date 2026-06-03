@@ -1333,7 +1333,7 @@ st.markdown("### 📊 Area-wise Water Quality Comparison")
 # ==========================================================
 
 zone_summary = (
-    area_df.groupby("Cust_Name_")
+    wq.groupby("Cust_Name_")
     .agg({
         "Turbidity":"mean",
         "FRC_PPM":"mean",
