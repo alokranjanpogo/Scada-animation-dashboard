@@ -2602,125 +2602,158 @@ st.markdown("### 🔥 Executive Heatmap Dashboard")
 
 heat_df = wq.copy()
 
-heat_df["Rating"] = pd.to_numeric(
-    heat_df["Rating"],
-    errors="coerce"
-)
-
-# ==========================================================
-# USE LATEST ACTUAL SAMPLE OF EACH AREA
-# ==========================================================
-
 heat_df["UpdatedOn"] = pd.to_datetime(
     heat_df["UpdatedOn"],
     errors="coerce"
 )
 
+heat_df["Rating"] = pd.to_numeric(
+    heat_df["Rating"],
+    errors="coerce"
+)
+
+# Latest record from each area
+
 zone_heat = (
     heat_df
     .sort_values("UpdatedOn")
     .groupby("Cust_Name_", as_index=True)
-    .last()[
-        [
-            "Turbidity",
-            "FRC_PPM",
-            "PH",
-            "Rating"
-        ]
-    ]
+    .last()
 )
-
-zone_heat["Rating"] = pd.to_numeric(
-    zone_heat["Rating"],
-    errors="coerce"
-)
-
-zone_heat = zone_heat.round(2)
 
 # ==========================================================
-# STANDARD BASED SCORING
+# COMPLIANCE SCORING
 # ==========================================================
 
 def turbidity_score(x):
+
     if pd.isna(x):
         return 1
+
     elif x <= 1:
         return 5
-    elif x <= 2:
-        return 4
-    elif x <= 3:
-        return 3
+
     elif x <= 5:
-        return 2
+        return 3
+
     else:
         return 1
 
-def ph_score(x):
-    if pd.isna(x):
-        return 1
-    elif 6.6 <= x <= 8.5:
-        return 5
-    elif (6.3 <= x < 6.6) or (8.5 < x <= 8.8):
-        return 4
-    elif (6.0 <= x < 6.3) or (8.8 < x <= 9.0):
-        return 3
-    elif (5.5 <= x < 6.0) or (9.0 < x <= 9.5):
-        return 2
-    else:
-        return 1
 
 def frc_score(x):
+
     if pd.isna(x):
         return 1
+
     elif 0.2 <= x <= 1.0:
         return 5
-    elif (0.15 <= x < 0.2) or (1.0 < x <= 1.2):
-        return 4
-    elif (0.10 <= x < 0.15) or (1.2 < x <= 1.5):
+
+    elif (0.1 <= x < 0.2) or (1.0 < x <= 1.5):
         return 3
-    elif (0.05 <= x < 0.10) or (1.5 < x <= 2.0):
-        return 2
+
     else:
         return 1
 
+
+def ph_score(x):
+
+    if pd.isna(x):
+        return 1
+
+    elif 6.6 <= x <= 8.5:
+        return 5
+
+    elif (6.0 <= x < 6.6) or (8.5 < x <= 9.0):
+        return 3
+
+    else:
+        return 1
+
+
+def rating_score(x):
+
+    if pd.isna(x):
+        return 1
+
+    elif x >= 4.5:
+        return 5
+
+    elif x >= 3:
+        return 3
+
+    else:
+        return 1
+
+
+def coliform_score(x):
+
+    if str(x).strip().lower() == "absent":
+        return 5
+
+    return 1
+
+
 # ==========================================================
-# EXECUTIVE SCORES (1 TO 5)
+# SCORE MATRIX
 # ==========================================================
 
-zone_heat["Turbidity Score"] = (
+score_matrix = pd.DataFrame(
+    index=zone_heat.index
+)
+
+score_matrix["Turbidity"] = (
     zone_heat["Turbidity"]
     .apply(turbidity_score)
 )
 
-zone_heat["FRC Score"] = (
+score_matrix["FRC"] = (
     zone_heat["FRC_PPM"]
     .apply(frc_score)
 )
 
-zone_heat["pH Score"] = (
+score_matrix["pH"] = (
     zone_heat["PH"]
     .apply(ph_score)
 )
 
-zone_heat["Rating Score"] = (
+score_matrix["Rating"] = (
     zone_heat["Rating"]
-    .fillna(1)
-    .clip(1,5)
+    .apply(rating_score)
 )
 
+score_matrix["Total Coliform"] = (
+    zone_heat["Total_Coli"]
+    .apply(coliform_score)
+)
+
+score_matrix["Faecal Coliform"] = (
+    zone_heat["Faecal_Col"]
+    .apply(coliform_score)
+)
 
 # ==========================================================
-# HEATMAP MATRIX
+# TEXT DISPLAY MATRIX
 # ==========================================================
 
-heat_matrix = zone_heat[
-    [
-        "Turbidity Score",
-        "FRC Score",
-        "pH Score",
-        "Rating Score",
-    ]
-]
+text_matrix = []
+
+for _, row in zone_heat.iterrows():
+
+    text_matrix.append([
+
+        f"{row['Turbidity']:.2f}",
+
+        f"{row['FRC_PPM']:.2f}",
+
+        f"{row['PH']:.2f}",
+
+        f"{row['Rating']:.1f}",
+
+        str(row["Total_Coli"]),
+
+        str(row["Faecal_Col"])
+
+    ])
 
 # ==========================================================
 # HEATMAP FIGURE
@@ -2730,34 +2763,36 @@ fig_heat = go.Figure(
 
     data=go.Heatmap(
 
-        z=heat_matrix.values,
+        z=score_matrix.values,
 
         x=[
-            "Turbidity\n(≤1 NTU)",
-            "FRC\n(0.2-1 ppm)",
-            "pH\n(6.6-8.5)",
-            "Rating\n(1-5)",
-            "WQI\n(%)"
+            "Turbidity",
+            "FRC",
+            "pH",
+            "Rating",
+            "Total Coliform",
+            "Faecal Coliform"
         ],
 
-        y=heat_matrix.index,
+        y=score_matrix.index,
 
-        colorscale="RdYlGn",
+        colorscale=[
+            [0.0, "#EF4444"],
+            [0.5, "#FACC15"],
+            [1.0, "#22C55E"]
+        ],
 
         zmin=1,
         zmax=5,
 
-        text=heat_matrix.values,
+        text=text_matrix,
 
         texttemplate="%{text}",
 
         textfont=dict(
-            size=8
+            size=9,
+            color="black"
         ),
-
-        hovertemplate=
-        "<b>%{y}</b><br>" +
-        "%{x}: %{z}<extra></extra>",
 
         hoverongaps=False
 
@@ -2767,11 +2802,11 @@ fig_heat = go.Figure(
 
 fig_heat.update_layout(
 
-    title="Zone-wise Executive Water Quality Compliance Heatmap",
+    title="Zone-wise Water Quality Compliance Heatmap",
 
     height=max(
         700,
-        len(zone_heat.index) * 35
+        len(score_matrix.index) * 35
     ),
 
     margin=dict(
@@ -2816,68 +2851,21 @@ st.info(
 • 3 – 4 : Average / Satisfactory (Yellow)
 • 1 – 2 : Poor (Red)
 
-Heatmap Interpretation:
+🟢 Total Coliform
+• Absent = Green
+• Present = Red
+
+🟢 Faecal Coliform
+• Absent = Green
+• Present = Red
+
+Heatmap Interpretation
+
 🟢 Green = Within Standard
-🟡 Yellow = Acceptable but Requires Observation
+🟡 Yellow = Acceptable / Observation
 🔴 Red = Requires Immediate Attention
 """
 )
-
-# ==========================================================
-# TOP / BOTTOM PERFORMERS
-# ==========================================================
-
-left_heat, right_heat = st.columns(2)
-
-# ==========================================================
-# BEST AREAS
-# ==========================================================
-
-with left_heat:
-
-    st.markdown(
-        "#### 🟢 Top Performing Areas"
-    )
-
-    best_zone = (
-        zone_heat
-        .sort_values(
-            "WQI",
-            ascending=False
-        )
-        .head(5)
-    )
-
-    for area in best_zone.index:
-
-        st.success(
-            f"✅ {area} | WQI: {best_zone.loc[area,'WQI']:.0f}%"
-        )
-
-# ==========================================================
-# LOW PERFORMING AREAS
-# ==========================================================
-
-with right_heat:
-
-    st.markdown(
-        "#### 🔴 Areas Requiring Attention"
-    )
-
-    poor_zone = (
-        zone_heat
-        .sort_values(
-            "WQI",
-            ascending=True
-        )
-        .head(5)
-    )
-
-    for area in poor_zone.index:
-
-        st.error(
-            f"⚠ {area} | WQI: {poor_zone.loc[area,'WQI']:.0f}%"
-        )
 
 st.markdown("<br>", unsafe_allow_html=True)
 # ==========================================================
