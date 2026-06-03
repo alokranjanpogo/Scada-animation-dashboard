@@ -1851,42 +1851,23 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("### 📈 Water Quality Trend Analysis")
 
 # ==========================================================
-# DATE PREPARATION
+# TREND DATA
 # ==========================================================
 
 trend_df = wq.copy()
 
-trend_df["UpdatedOn"] = pd.to_datetime(
-    trend_df["UpdatedOn"],
+trend_df["created_da"] = pd.to_datetime(
+    trend_df["created_da"],
     errors="coerce"
 )
 
-trend_df = trend_df.dropna(
-    subset=["UpdatedOn"]
-)
-
-trend_df["Date"] = trend_df["UpdatedOn"].dt.date
-
-# ==========================================================
-# DAILY TREND
-# ==========================================================
-
-daily_trend = (
-    trend_df.groupby("Date")
-    .agg({
-        "Turbidity":"mean",
-        "FRC_PPM":"mean",
-        "PH":"mean",
-        "Rating":"mean"
-    })
-    .reset_index()
-)
+trend_df = trend_df.sort_values("created_da")
 
 # ==========================================================
 # TABS
 # ==========================================================
 
-t1,t2,t3,t4 = st.tabs([
+t1, t2, t3, t4 = st.tabs([
     "Turbidity",
     "FRC",
     "pH",
@@ -1902,15 +1883,31 @@ with t1:
     fig_turb_trend = go.Figure()
 
     fig_turb_trend.add_trace(
+
         go.Scatter(
-            x=daily_trend["Date"],
-            y=daily_trend["Turbidity"],
+
+            x=trend_df["Cust_Name_"],
+
+            y=trend_df["Turbidity"],
+
             mode="lines+markers",
-            name="Turbidity",
+
+            marker=dict(
+                size=8
+            ),
+
             line=dict(
                 color="#EF4444",
                 width=3
-            )
+            ),
+
+            customdata=trend_df["created_da"],
+
+            hovertemplate=
+            "<b>%{x}</b><br>" +
+            "Turbidity: %{y:.2f} NTU<br>" +
+            "Date: %{customdata|%d-%b-%Y}" +
+            "<extra></extra>"
         )
     )
 
@@ -1921,9 +1918,11 @@ with t1:
     )
 
     fig_turb_trend.update_layout(
-        title="Turbidity Trend",
-        height=350,
-        template="plotly_white"
+        title="Turbidity Trend by Sampling Point",
+        height=450,
+        template="plotly_white",
+        xaxis_title="Customer / Sampling Point",
+        yaxis_title="Turbidity (NTU)"
     )
 
     st.plotly_chart(
@@ -1940,15 +1939,31 @@ with t2:
     fig_frc_trend = go.Figure()
 
     fig_frc_trend.add_trace(
+
         go.Scatter(
-            x=daily_trend["Date"],
-            y=daily_trend["FRC_PPM"],
+
+            x=trend_df["Cust_Name_"],
+
+            y=trend_df["FRC_PPM"],
+
             mode="lines+markers",
-            name="FRC",
+
+            marker=dict(
+                size=8
+            ),
+
             line=dict(
                 color="#00B4D8",
                 width=3
-            )
+            ),
+
+            customdata=trend_df["created_da"],
+
+            hovertemplate=
+            "<b>%{x}</b><br>" +
+            "FRC: %{y:.2f} ppm<br>" +
+            "Date: %{customdata|%d-%b-%Y}" +
+            "<extra></extra>"
         )
     )
 
@@ -1958,10 +1973,18 @@ with t2:
         line_color="red"
     )
 
+    fig_frc_trend.add_hline(
+        y=1.0,
+        line_dash="dash",
+        line_color="green"
+    )
+
     fig_frc_trend.update_layout(
-        title="Free Residual Chlorine Trend",
-        height=350,
-        template="plotly_white"
+        title="Free Residual Chlorine Trend by Sampling Point",
+        height=450,
+        template="plotly_white",
+        xaxis_title="Customer / Sampling Point",
+        yaxis_title="FRC (ppm)"
     )
 
     st.plotly_chart(
@@ -1978,15 +2001,31 @@ with t3:
     fig_ph_trend = go.Figure()
 
     fig_ph_trend.add_trace(
+
         go.Scatter(
-            x=daily_trend["Date"],
-            y=daily_trend["PH"],
+
+            x=trend_df["Cust_Name_"],
+
+            y=trend_df["PH"],
+
             mode="lines+markers",
-            name="pH",
+
+            marker=dict(
+                size=8
+            ),
+
             line=dict(
                 color="#22C55E",
                 width=3
-            )
+            ),
+
+            customdata=trend_df["created_da"],
+
+            hovertemplate=
+            "<b>%{x}</b><br>" +
+            "pH: %{y:.2f}<br>" +
+            "Date: %{customdata|%d-%b-%Y}" +
+            "<extra></extra>"
         )
     )
 
@@ -2003,9 +2042,11 @@ with t3:
     )
 
     fig_ph_trend.update_layout(
-        title="pH Trend",
-        height=350,
-        template="plotly_white"
+        title="pH Trend by Sampling Point",
+        height=450,
+        template="plotly_white",
+        xaxis_title="Customer / Sampling Point",
+        yaxis_title="pH"
     )
 
     st.plotly_chart(
@@ -2022,22 +2063,40 @@ with t4:
     fig_rating = go.Figure()
 
     fig_rating.add_trace(
+
         go.Scatter(
-            x=daily_trend["Date"],
-            y=daily_trend["Rating"],
+
+            x=trend_df["Cust_Name_"],
+
+            y=trend_df["Rating"],
+
             mode="lines+markers",
-            name="Rating",
+
+            marker=dict(
+                size=8
+            ),
+
             line=dict(
                 color="#F59E0B",
                 width=3
-            )
+            ),
+
+            customdata=trend_df["created_da"],
+
+            hovertemplate=
+            "<b>%{x}</b><br>" +
+            "Rating: %{y:.1f}<br>" +
+            "Date: %{customdata|%d-%b-%Y}" +
+            "<extra></extra>"
         )
     )
 
     fig_rating.update_layout(
-        title="Customer Rating Trend",
-        height=350,
-        template="plotly_white"
+        title="Customer Rating Trend by Sampling Point",
+        height=450,
+        template="plotly_white",
+        xaxis_title="Customer / Sampling Point",
+        yaxis_title="Rating"
     )
 
     st.plotly_chart(
