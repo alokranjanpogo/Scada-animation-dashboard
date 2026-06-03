@@ -2613,41 +2613,31 @@ heat_df["UpdatedOn"] = pd.to_datetime(
 heat_df["Year"] = heat_df["UpdatedOn"].dt.year
 heat_df["Month"] = heat_df["UpdatedOn"].dt.month_name()
 
+all_months = [
+    "January","February","March","April",
+    "May","June","July","August",
+    "September","October","November","December"
+]
+
+all_years = list(range(2026, 2036))
+
 f1, f2 = st.columns(2)
 
 with f1:
 
     selected_year = st.selectbox(
         "📅 Select Year",
-        sorted(
-            heat_df["Year"]
-            .dropna()
-            .unique()
-            .tolist(),
-            reverse=True
-        )
+        all_years
     )
 
 with f2:
 
-    month_order = [
-        "January","February","March","April",
-        "May","June","July","August",
-        "September","October","November","December"
-    ]
-
-    available_months = [
-        m for m in month_order
-        if m in heat_df["Month"].unique()
-    ]
-
     selected_month = st.selectbox(
         "📆 Select Month",
-        available_months,
-        index=len(available_months)-1
+        all_months
     )
 
-heat_df = heat_df[
+filtered_heat_df = heat_df[
     (heat_df["Year"] == selected_year)
     &
     (heat_df["Month"] == selected_month)
@@ -2667,9 +2657,15 @@ heat_df["Rating"] = pd.to_numeric(
 )
 
 # Latest record from each area
+if filtered_heat_df.empty:
 
+    st.warning(
+        f"⚠️ Data Not Available for {selected_month} {selected_year}"
+    )
+
+    st.stop()
 zone_heat = (
-    heat_df
+    filtered_heat_df
     .sort_values("UpdatedOn")
     .groupby("Cust_Name_", as_index=True)
     .last()
