@@ -10,3 +10,4 @@ torch
 opencv-python-headless
 requests
 scikit-learn
+openpyxl
