@@ -2719,7 +2719,6 @@ heat_matrix = zone_heat[
         "FRC Score",
         "pH Score",
         "Rating Score",
-        "WQI"
     ]
 ]
 
