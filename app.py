@@ -2827,46 +2827,47 @@ st.plotly_chart(
 # HEATMAP LEGEND
 # ==========================================================
 
-st.info(
-    """
-📘 Executive Heatmap Standards
+with st.expander(
+    "📘 Executive Heatmap Standards (Click to View)",
+    expanded=False
+):
 
-🟢 Turbidity (NTU)
-• ≤ 1 : Desirable (Green)
-• > 1 to 5 : Acceptable / Permissible (Yellow)
-• > 5 : Non-Compliant (Red)
+    st.markdown(
+        """
+### Turbidity (NTU)
+- 🟢 ≤ 1 : Desirable
+- 🟡 > 1 to 5 : Acceptable / Permissible
+- 🔴 > 5 : Non-Compliant
 
-🟢 pH
-• 6.6 – 8.5 : Acceptable Range (Green)
-• 6.0 – 6.5 or 8.5 – 9.0 : Observation (Yellow)
-• < 6.0 or > 9.0 : Non-Compliant (Red)
+### pH
+- 🟢 6.6 – 8.5 : Acceptable Range
+- 🟡 6.0 – 6.5 or 8.5 – 9.0 : Observation
+- 🔴 < 6.0 or > 9.0 : Non-Compliant
 
-🟢 Free Residual Chlorine (FRC)
-• 0.2 – 1.0 ppm : Adequate Residual Chlorine (Green)
-• 0.1 – 0.2 ppm or 1.0 – 1.5 ppm : Observation (Yellow)
-• < 0.1 ppm or > 1.5 ppm : Non-Compliant (Red)
+### Free Residual Chlorine (FRC)
+- 🟢 0.2 – 1.0 ppm : Adequate Residual Chlorine
+- 🟡 0.1 – 0.2 ppm or 1.0 – 1.5 ppm : Observation
+- 🔴 < 0.1 ppm or > 1.5 ppm : Non-Compliant
 
-🟢 Customer Rating
-• 5 : Excellent (Green)
-• 3 – 4 : Average / Satisfactory (Yellow)
-• 1 – 2 : Poor (Red)
+### Customer Rating
+- 🟢 5 : Excellent
+- 🟡 3 – 4 : Average / Satisfactory
+- 🔴 1 – 2 : Poor
 
-🟢 Total Coliform
-• Absent = Green
-• Present = Red
+### Total Coliform
+- 🟢 Absent
+- 🔴 Present
 
-🟢 Faecal Coliform
-• Absent = Green
-• Present = Red
+### Faecal Coliform
+- 🟢 Absent
+- 🔴 Present
 
-Heatmap Interpretation
-
-🟢 Green = Within Standard
-🟡 Yellow = Acceptable / Observation
-🔴 Red = Requires Immediate Attention
+### Heatmap Interpretation
+- 🟢 Green = Within Standard
+- 🟡 Yellow = Acceptable / Observation
+- 🔴 Red = Requires Immediate Attention
 """
-)
-
+    )
 st.markdown("<br>", unsafe_allow_html=True)
 # ==========================================================
 # WATER QUALITY EXECUTIVE DASHBOARD - PART 10
