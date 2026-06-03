@@ -2607,16 +2607,35 @@ heat_df["Rating"] = pd.to_numeric(
     errors="coerce"
 )
 
-zone_heat = (
-    heat_df.groupby("Cust_Name_")
-    .agg({
-        "Turbidity":"mean",
-        "FRC_PPM":"mean",
-        "PH":"mean",
-        "Rating":"mean"
-    })
-    .round(2)
+# ==========================================================
+# USE LATEST ACTUAL SAMPLE OF EACH AREA
+# ==========================================================
+
+heat_df["UpdatedOn"] = pd.to_datetime(
+    heat_df["UpdatedOn"],
+    errors="coerce"
 )
+
+zone_heat = (
+    heat_df
+    .sort_values("UpdatedOn")
+    .groupby("Cust_Name_", as_index=True)
+    .last()[
+        [
+            "Turbidity",
+            "FRC_PPM",
+            "PH",
+            "Rating"
+        ]
+    ]
+)
+
+zone_heat["Rating"] = pd.to_numeric(
+    zone_heat["Rating"],
+    errors="coerce"
+)
+
+zone_heat = zone_heat.round(2)
 
 # ==========================================================
 # STANDARD BASED SCORING
@@ -2751,7 +2770,7 @@ fig_heat = go.Figure(
         texttemplate="%{text}",
 
         textfont=dict(
-            size=12
+            size=8
         ),
 
         hovertemplate=
@@ -2768,7 +2787,7 @@ fig_heat.update_layout(
 
     title="Zone-wise Executive Water Quality Compliance Heatmap",
 
-    height=700,
+    height=max(700, len()zone_heat.index)*35)
 
     margin=dict(
         l=10,
