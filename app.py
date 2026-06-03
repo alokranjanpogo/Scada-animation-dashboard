@@ -1064,7 +1064,67 @@ Moharda Water Supply Monitoring System
 # ==========================================================
 
 wq = pd.read_excel("mohardawaterQuality.xlsx")
+# ==========================================================
+# GLOBAL MONTH & YEAR FILTER
+# ==========================================================
 
+wq["UpdatedOn"] = pd.to_datetime(
+    wq["UpdatedOn"],
+    errors="coerce"
+)
+
+wq["Year"] = wq["UpdatedOn"].dt.year
+wq["Month"] = wq["UpdatedOn"].dt.month_name()
+
+all_months = [
+    "January","February","March","April",
+    "May","June","July","August",
+    "September","October","November","December"
+]
+
+all_years = list(range(2026, 2036))
+
+st.markdown("### 📅 Dashboard Time Filter")
+
+f1, f2 = st.columns(2)
+
+with f1:
+
+    selected_year = st.selectbox(
+        "Select Year",
+        all_years,
+        index=0
+    )
+
+with f2:
+
+    selected_month = st.selectbox(
+        "Select Month",
+        all_months,
+        index=0
+    )
+
+filtered_wq = wq[
+    (wq["Year"] == selected_year)
+    &
+    (wq["Month"] == selected_month)
+]
+
+if filtered_wq.empty:
+
+    st.warning(
+        f"⚠️ Data Not Available for {selected_month} {selected_year}"
+    )
+
+    st.stop()
+
+st.success(
+    f"Showing Dashboard Data for {selected_month} {selected_year}"
+)
+
+# Use filtered data for entire dashboard
+
+wq = filtered_wq.copy()
 # Remove blank coordinates
 wq = wq[
     (wq["Latitude"] != 0) &
