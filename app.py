@@ -2787,7 +2787,10 @@ fig_heat.update_layout(
 
     title="Zone-wise Executive Water Quality Compliance Heatmap",
 
-    height=max(700, len()zone_heat.index)*35)
+    height=max(
+        700,
+        len(zone_heat.index) * 35
+    ),
 
     margin=dict(
         l=10,
@@ -2811,27 +2814,30 @@ st.info(
     """
 📘 Executive Heatmap Standards
 
-🟢 Turbidity:
-• Desirable Limit ≤ 1 NTU
-• Permissible Limit ≤ 5 NTU
-(BIS IS 10500)
+🟢 Turbidity (NTU)
+• ≤ 1 : Desirable (Green)
+• > 1 to 5 : Acceptable / Permissible (Yellow)
+• > 5 : Non-Compliant (Red)
 
-🟢 pH:
-• Acceptable Range 6.6 – 8.5
-(WHO / BIS Guidelines)
+🟢 pH
+• 6.6 – 8.5 : Acceptable Range (Green)
+• 6.0 – 6.5 or 8.5 – 9.0 : Observation (Yellow)
+• < 6.0 or > 9.0 : Non-Compliant (Red)
 
-🟢 Free Residual Chlorine (FRC):
-• Minimum = 0.2 ppm
-• Maximum = 1.0 ppm
+🟢 Free Residual Chlorine (FRC)
+• 0.2 – 1.0 ppm : Adequate Residual Chlorine (Green)
+• 0.1 – 0.2 ppm or 1.0 – 1.5 ppm : Observation (Yellow)
+• < 0.1 ppm or > 1.5 ppm : Non-Compliant (Red)
 
-🟢 Customer Rating:
-• Minimum = 1
-• Maximum = 5
+🟢 Customer Rating
+• 5 : Excellent (Green)
+• 3 – 4 : Average / Satisfactory (Yellow)
+• 1 – 2 : Poor (Red)
 
-Heatmap Score Scale:
-🟢 5 = Excellent
-🟡 3 = Moderate
-🔴 1 = Critical
+Heatmap Interpretation:
+🟢 Green = Within Standard
+🟡 Yellow = Acceptable but Requires Observation
+🔴 Red = Requires Immediate Attention
 """
 )
 
