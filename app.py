@@ -3084,85 +3084,194 @@ if collect_filter:
 # ==========================================================
 
 st.markdown("---")
-st.markdown("### 📋 Executive Summary")
+st.markdown("## 📋 Executive Summary")
 
 summary1, summary2 = st.columns(2)
 
 with summary1:
 
-    st.info(
+    st.markdown(
         f"""
-        Total Samples Analysed : {len(filtered_df)}
-        """
+        <div style="
+        background:white;
+        padding:18px;
+        border-radius:12px;
+        border-left:6px solid #0d6efd;
+        margin-bottom:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        ">
+        <h5>📊 Total Samples Analysed</h5>
+        <h2>{len(filtered_df)}</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.info(
+    st.markdown(
         f"""
-        Safe Samples : {safe_samples}
-        """
+        <div style="
+        background:white;
+        padding:18px;
+        border-radius:12px;
+        border-left:6px solid #198754;
+        margin-bottom:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        ">
+        <h5>✅ Safe Samples</h5>
+        <h2>{safe_samples}</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.info(
+    st.markdown(
         f"""
-        Critical Samples : {critical_samples}
-        """
+        <div style="
+        background:white;
+        padding:18px;
+        border-radius:12px;
+        border-left:6px solid #dc3545;
+        margin-bottom:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        ">
+        <h5>🚨 Critical Samples</h5>
+        <h2>{critical_samples}</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.info(
+    st.markdown(
         f"""
-        Average Rating : {avg_rating}
-        """
+        <div style="
+        background:white;
+        padding:18px;
+        border-radius:12px;
+        border-left:6px solid #fd7e14;
+        margin-bottom:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        ">
+        <h5>⭐ Average Rating</h5>
+        <h2>{avg_rating}</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 with summary2:
 
-    st.success(
+    st.markdown(
         f"""
-        Water Quality Index : {wqi_score}
-        """
+        <div style="
+        background:#e8f5e9;
+        padding:18px;
+        border-radius:12px;
+        border-left:6px solid #198754;
+        margin-bottom:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        ">
+        <h5>💧 Water Quality Index</h5>
+        <h1>{wqi_score}</h1>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.success(
+    st.markdown(
         f"""
-        Most Frequent Failure : {top_failure}
-        """
+        <div style="
+        background:white;
+        padding:18px;
+        border-radius:12px;
+        border-left:6px solid #6f42c1;
+        margin-bottom:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        ">
+        <h5>⚠ Most Frequent Failure</h5>
+        <h3>{top_failure}</h3>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.success(
+    st.markdown(
         f"""
-        Total Coliform Cases : {total_coliform}
-        """
+        <div style="
+        background:white;
+        padding:18px;
+        border-radius:12px;
+        border-left:6px solid #20c997;
+        margin-bottom:10px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        ">
+        <h5>🦠 Total Coliform Cases</h5>
+        <h2>{total_coliform}</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 # ==========================================================
 # FINAL STATUS
 # ==========================================================
 
+st.markdown("### 🎯 Overall System Status")
+
 if wqi_score >= 80:
 
-    st.success(
+    st.markdown(
         """
-        ✅ OVERALL SYSTEM STATUS :
-        GOOD WATER QUALITY
-        """
+        <div style="
+        background:#d1e7dd;
+        color:#0f5132;
+        padding:20px;
+        border-radius:12px;
+        text-align:center;
+        font-size:24px;
+        font-weight:bold;
+        ">
+        ✅ GOOD WATER QUALITY
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 elif wqi_score >= 60:
 
-    st.warning(
+    st.markdown(
         """
-        ⚠ OVERALL SYSTEM STATUS :
-        MODERATE ATTENTION REQUIRED
-        """
+        <div style="
+        background:#fff3cd;
+        color:#664d03;
+        padding:20px;
+        border-radius:12px;
+        text-align:center;
+        font-size:24px;
+        font-weight:bold;
+        ">
+        ⚠ MODERATE ATTENTION REQUIRED
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 else:
 
-    st.error(
+    st.markdown(
         """
-        🚨 OVERALL SYSTEM STATUS :
-        IMMEDIATE ACTION REQUIRED
-        """
+        <div style="
+        background:#f8d7da;
+        color:#842029;
+        padding:20px;
+        border-radius:12px;
+        text-align:center;
+        font-size:24px;
+        font-weight:bold;
+        ">
+        🚨 IMMEDIATE ACTION REQUIRED
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 # ==========================================================
@@ -3175,14 +3284,16 @@ st.markdown(
     """
     <div style="
     text-align:center;
-    padding:15px;
-    background:#f8f9fa;
-    border-radius:10px;
+    padding:18px;
+    background:linear-gradient(90deg,#0d6efd,#20c997);
+    color:white;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:bold;
     ">
-    <b>GIS Based Water Quality Executive Dashboard</b><br>
+    GIS Based Water Quality Executive Dashboard<br>
     Moharda Water Supply System Monitoring
     </div>
     """,
     unsafe_allow_html=True
 )
-
