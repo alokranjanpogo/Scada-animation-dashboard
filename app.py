@@ -1331,63 +1331,7 @@ st.markdown("### 📊 Area-wise Water Quality Comparison")
 # ==========================================================
 # AREA SUMMARY
 # ==========================================================
-# ==========================================================
-# MONTH & YEAR FILTER
-# ==========================================================
 
-area_df = wq.copy()
-
-area_df["UpdatedOn"] = pd.to_datetime(
-    area_df["UpdatedOn"],
-    errors="coerce"
-)
-
-area_df["Year"] = area_df["UpdatedOn"].dt.year
-area_df["Month"] = area_df["UpdatedOn"].dt.month_name()
-
-all_months = [
-    "January","February","March","April",
-    "May","June","July","August",
-    "September","October","November","December"
-]
-
-all_years = list(range(2026, 2036))
-
-f1, f2 = st.columns(2)
-
-with f1:
-
-    selected_year_area = st.selectbox(
-        "📅 Select Year",
-        all_years,
-        key="area_year"
-    )
-
-with f2:
-
-    selected_month_area = st.selectbox(
-        "📆 Select Month",
-        all_months,
-        key="area_month"
-    )
-
-area_df = area_df[
-    (area_df["Year"] == selected_year_area)
-    &
-    (area_df["Month"] == selected_month_area)
-]
-
-if area_df.empty:
-
-    st.warning(
-        f"⚠️ Data Not Available for {selected_month_area} {selected_year_area}"
-    )
-
-    st.stop()
-
-st.success(
-    f"Showing Data for {selected_month_area} {selected_year_area}"
-)
 zone_summary = (
     area_df.groupby("Cust_Name_")
     .agg({
@@ -2717,47 +2661,6 @@ st.markdown("### 🔥 Executive Heatmap Dashboard")
 # ==========================================================
 
 heat_df = wq.copy()
-# ==========================================================
-# MONTH & YEAR FILTER
-# ==========================================================
-
-heat_df["UpdatedOn"] = pd.to_datetime(
-    heat_df["UpdatedOn"],
-    errors="coerce"
-)
-
-heat_df["Year"] = heat_df["UpdatedOn"].dt.year
-heat_df["Month"] = heat_df["UpdatedOn"].dt.month_name()
-
-all_months = [
-    "January","February","March","April",
-    "May","June","July","August",
-    "September","October","November","December"
-]
-
-all_years = list(range(2026, 2036))
-
-f1, f2 = st.columns(2)
-
-with f1:
-
-    selected_year = st.selectbox(
-        "📅 Select Year",
-        all_years
-    )
-
-with f2:
-
-    selected_month = st.selectbox(
-        "📆 Select Month",
-        all_months
-    )
-
-filtered_heat_df = heat_df[
-    (heat_df["Year"] == selected_year)
-    &
-    (heat_df["Month"] == selected_month)
-]
 
 st.success(
     f"Showing Executive Heatmap for {selected_month} {selected_year}"
