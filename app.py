@@ -2676,15 +2676,8 @@ heat_df["Rating"] = pd.to_numeric(
 )
 
 # Latest record from each area
-if filtered_heat_df.empty:
-
-    st.warning(
-        f"⚠️ Data Not Available for {selected_month} {selected_year}"
-    )
-
-    st.stop()
 zone_heat = (
-    filtered_heat_df
+    heat_df
     .sort_values("UpdatedOn")
     .groupby("Cust_Name_", as_index=True)
     .last()
