@@ -2601,7 +2601,61 @@ st.markdown("### 🔥 Executive Heatmap Dashboard")
 # ==========================================================
 
 heat_df = wq.copy()
+# ==========================================================
+# MONTH & YEAR FILTER
+# ==========================================================
 
+heat_df["UpdatedOn"] = pd.to_datetime(
+    heat_df["UpdatedOn"],
+    errors="coerce"
+)
+
+heat_df["Year"] = heat_df["UpdatedOn"].dt.year
+heat_df["Month"] = heat_df["UpdatedOn"].dt.month_name()
+
+f1, f2 = st.columns(2)
+
+with f1:
+
+    selected_year = st.selectbox(
+        "📅 Select Year",
+        sorted(
+            heat_df["Year"]
+            .dropna()
+            .unique()
+            .tolist(),
+            reverse=True
+        )
+    )
+
+with f2:
+
+    month_order = [
+        "January","February","March","April",
+        "May","June","July","August",
+        "September","October","November","December"
+    ]
+
+    available_months = [
+        m for m in month_order
+        if m in heat_df["Month"].unique()
+    ]
+
+    selected_month = st.selectbox(
+        "📆 Select Month",
+        available_months,
+        index=len(available_months)-1
+    )
+
+heat_df = heat_df[
+    (heat_df["Year"] == selected_year)
+    &
+    (heat_df["Month"] == selected_month)
+]
+
+st.success(
+    f"Showing Executive Heatmap for {selected_month} {selected_year}"
+)
 heat_df["UpdatedOn"] = pd.to_datetime(
     heat_df["UpdatedOn"],
     errors="coerce"
